@@ -95,5 +95,4 @@ def write_times(t_dict, type):
 if __name__ == "__main__":
     exec_time_dicts = create_dicts()
     exec_times_file = read_exec_times()
-    exec_times_file.pop()
     calculate_avg(exec_times_file, exec_time_dicts, type)
