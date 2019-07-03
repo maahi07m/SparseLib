@@ -5,14 +5,19 @@ import time
 import sys
 import numpy as np
 sys.path.append('../')
-from profile import profile
+# from profile import profile
 
 
 def read_matrix():
     file_name = 'output_' + sys.argv[1] + '_' + sys.argv[2] + '_' + sys.argv[3] + '.txt'
     # file_name = 'output.txt'
+    start = time.time()
     with open(file_name, 'r') as f:
         A = tuple([tuple(map(int, line.split())) for line in f])
+
+    total_time = time.time()-start
+    with open('read_seq_time.txt', 'a') as f:
+        f.write('%s\t%s\t%.5f\n' % (sys.argv[1], sys.argv[2], total_time))
     return A
 
 
@@ -53,7 +58,7 @@ def diagonal():
     with open('execution_time.txt', 'a') as f:
         f.write('Diagonal %s\t%s\t%.5f\n' % (sys.argv[1], sys.argv[2], total_time))
     print("total time : ", total_time)
-    return AD, LA
+    # return AD, LA
     # print(AD)
     # print(LA)
 
@@ -162,11 +167,10 @@ def CSC(A):
     total_time = time.time() - start_time
     with open('execution_time.txt', 'a') as f:
         f.write('CSC %s\t%s\t%.5f\n' % (sys.argv[1], sys.argv[2], total_time))
-    return AR, IA, JA
 
 
 A = read_matrix()
 
 if __name__ == '__main__':
-    AR1, IA1, JA1 = CSC(np.array(A))
-    AD, LA = diagonal()
+    CSC(np.array(A))
+    diagonal()
