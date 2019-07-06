@@ -1,40 +1,14 @@
 import time
 from numpy import array
 from scipy.sparse import csr_matrix
+import sys
+sys.path.append('../')
+from compress.csr_coo import CSR
+from read_file.matrix_read import read_matrix_parallel
 
-file_1 = "output_20_0.5_1.txt"
-file_2 = "output_20_0.5_2.txt"
-
-
-def read_matrix(file):
-    while True:
-        data = file.readline()
-        if not data:
-            break
-        line = tuple(map(int, data.split()))
-        yield line
-
-
-def CSR(file_name):
-    size = file_name.split('_', 2)[1]
-    AR, IA, JA = [], [], []
-    IA.append(0)
-    ne_counter = 0
-    # file_name = 'output_' + sys.argv[1] + '_' + sys.argv[2] + '_' + sys.argv[3] + '.txt'
-    with open(file_name, 'r') as f:
-        for line in read_matrix(f):
-            for col, value in enumerate(line):
-                if value != 0:
-                    AR.append(value)
-                    ne_counter += 1
-                    JA.append(col)
-            IA.append(ne_counter)
-
-    print("AR = ", AR)
-    print("IA = ", IA)
-    print("JA = ", JA)
-    return AR, IA, JA, int(size)
-
+file_1 = "output_10_0.5_1.txt"
+file_2 = "output_10_0.5_2.txt"
+size = 10
 
 def sum_1xN():
     AR1, IA1, JA1, size = CSR(file_1)
@@ -111,9 +85,9 @@ def sum_Nx1():
 
 
 def sum_matrices_nxn():
-    AR1, IA1, JA1, size = CSR(file_1)
+    AR1, IA1, JA1 = CSR(file_1)
     print("-"*100)
-    AR2, IA2, JA2, _ = CSR(file_2)
+    AR2, IA2, JA2 = CSR(file_2)
 
     start = time.time()
     total = []
@@ -165,9 +139,9 @@ def sum_matrices_nxn():
 
 def subtraction_1xN():
     # AR1 - AR2
-    AR1, IA1, JA1, size = CSR(file_1)
+    AR1, IA1, JA1 = CSR(file_1)
     print("-" * 100)
-    AR2, IA2, JA2, _ = CSR(file_2)
+    AR2, IA2, JA2 = CSR(file_2)
 
     start = time.time()
 
@@ -293,18 +267,10 @@ def subtraction_matrices_nxn():
     # return total
 
 
-def read_matrix_sequentially(FILE):
-    # file_name = 'output_' + sys.argv[1] + '_' + sys.argv[2] + '_' + sys.argv[3] + '.txt'
-    file_name = FILE
-    with open(file_name, 'r') as f:
-        A = [list(map(int, line.split())) for line in f]
-    return A
-
-
 def sum_matrices_numpy():
-    A = read_matrix_sequentially(file_1)
+    A = read_matrix_parallel(file_1, '')
 
-    B = read_matrix_sequentially(file_2)
+    B = read_matrix_parallel(file_2, '')
 
     start = time.time()
     A = csr_matrix(array(A))
@@ -317,9 +283,9 @@ def sum_matrices_numpy():
 
 
 def subtraction_matrices_numpy():
-    A = read_matrix_sequentially(file_1)
+    A = read_matrix_parallel(file_1)
 
-    B = read_matrix_sequentially(file_2)
+    B = read_matrix_parallel(file_2)
 
     start = time.time()
     A = csr_matrix(array(A))
@@ -332,14 +298,15 @@ def subtraction_matrices_numpy():
 
 
 if __name__ == '__main__':
-    # total = sum_matrices_nxn()
+    total = sum_matrices_nxn()
     # sum_1xN()
     # sum_Nx1()
     # subtraction_matrices()
-    total = subtraction_1xN()
+    # total = subtraction_1xN()
     # subtraction_Nx1()
 
-    # total_np = sum_matrices_numpy()
-    total_np = subtraction_matrices_numpy()
+    total_np = sum_matrices_numpy()
+    # total_np = subtraction_matrices_numpy()
     print(total_np)
     print(total == total_np)
+

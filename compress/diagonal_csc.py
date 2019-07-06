@@ -1,28 +1,15 @@
-# To run: python3 diagonal_csc.py <number>
-
-
+"""To run: python3 diagonal_csc.py <size> <density> <file_id>"""
 import time
 import sys
+import os
 import numpy as np
+# from helpers.profile import profile
 sys.path.append('../')
-# from profile import profile
-
-
-def read_matrix():
-    file_name = 'output_' + sys.argv[1] + '_' + sys.argv[2] + '_' + sys.argv[3] + '.txt'
-    # file_name = 'output.txt'
-    start = time.time()
-    with open(file_name, 'r') as f:
-        A = tuple([tuple(map(int, line.split())) for line in f])
-
-    total_time = time.time()-start
-    with open('read_seq_time.txt', 'a') as f:
-        f.write('%s\t%s\t%.5f\n' % (sys.argv[1], sys.argv[2], total_time))
-    return A
+from read_file.matrix_read import read_matrix_parallel
 
 
 # @profile
-def diagonal():
+def diagonal(write_time=False, matrix_size='-', density='-', file_path='../'):
     LA, AD = [], [[]]
     a_length = len(A)
     start_time = time.time()
@@ -54,10 +41,11 @@ def diagonal():
     else:
         create_ad_without_main_diagonal(AD, upper_diagonals, lower_diagonals, a_length)
 
-    total_time = time.time() - start_time
-    with open('execution_time.txt', 'a') as f:
-        f.write('Diagonal %s\t%s\t%.5f\n' % (sys.argv[1], sys.argv[2], total_time))
-    print("total time : ", total_time)
+    if write_time:
+        total_time = time.time() - start_time
+        with open(os.path.join(file_path+'execution_results', 'execution_time.txt'), 'a') as f:
+            f.write('Diagonal %s\t%s\t%.5f\n' % (matrix_size, density, total_time))
+        print("total time : ", total_time)
     # return AD, LA
     # print(AD)
     # print(LA)
@@ -149,11 +137,12 @@ def get_main_diagonal(a_length):
         return []
 
 
-def CSC(A):
+def CSC(file_name, write_time=False, matrix_size='-', density='-', file_path='../'):
+    A = np.array(read_matrix_parallel(file_name, matrix_size, density))
+    start_time = time.time()
     AR, IA, JA = [], [], []
     ne_counter = 0
-    start_time = time.time()
-    np.transpose(A)
+    A = np.transpose(A)
     for col, line in enumerate(A):
         for row, value in enumerate(line):
             if value != 0:
@@ -164,13 +153,22 @@ def CSC(A):
                 if len(JA) == 0:
                     JA.append(col)
         JA.append(ne_counter)
-    total_time = time.time() - start_time
-    with open('execution_time.txt', 'a') as f:
-        f.write('CSC %s\t%s\t%.5f\n' % (sys.argv[1], sys.argv[2], total_time))
+    if write_time:
+        total_time = time.time() - start_time
+        with open(os.path.join(file_path+'execution_results', 'execution_time.txt'), 'a') as f:
+            f.write('CSC %s\t%s\t%.5f\n' % (matrix_size, density, total_time))
 
+    return AR, IA, JA
 
-A = read_matrix()
 
 if __name__ == '__main__':
-    CSC(np.array(A))
-    diagonal()
+    global A
+    if len(sys.argv) == 4:
+        file_name = 'output_' + sys.argv[1] + '_' + sys.argv[2] + '_' + sys.argv[3] + '.txt'
+        # A = read_matrix_parallel(file_name, sys.argv[1], sys.argv[2])
+        # AR, IA, JA = CSC(np.array(A), True, sys.argv[1], sys.argv[2])
+        # diagonal(True, sys.argv[1], sys.argv[2])
+    else:
+        file_name = 'output_10_0.5_1.txt'
+        AR, IA, JA = CSC(np.array(A), True)
+        # diagonal(True)

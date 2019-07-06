@@ -1,9 +1,8 @@
 # To run: python3 generator.py <number of rows> <density>
 # It creates a sparse matrix with <number> of rows and columns
-
-
 import time
 import sys
+import os
 import numpy as np
 from scipy.sparse import random
 
@@ -68,11 +67,11 @@ def generate_sparse_matrix(lb, ub, m, n, dens):
     return generated_matrix
 
 
-def write_matrix_to_file(lb, ub, m, n, matrix):
+def write_matrix_to_file(lower_bound, upper_bound, first_dimension, density, id, matrix):
     # file_name = 'output' + str(lb) + "_" + str(ub) + "_" + str(m) + "_" + str(n) + ".txt"
-    file_name = 'output_' + sys.argv[1] + '_' + sys.argv[2] + '_' + sys.argv[3] + '.txt'
+    file_name = 'output_' + first_dimension + '_' + density + '_' + id + '.txt'
     matrix = matrix.toarray()
-    with open(file_name,'w') as f:
+    with open(os.path.join('data_files', file_name), 'w') as f:
         for item in matrix:
             for index,inner in enumerate(item):
                 if index == item.shape[0] - 1:
@@ -82,14 +81,18 @@ def write_matrix_to_file(lb, ub, m, n, matrix):
             f.write("\n")
 
 
-def main():
-    # lb, ub, m, n, dens = get_user_input()
-    # generated_matrix = generate_sparse_matrix(lb, ub, m, n, dens)
-    # lb, ub, m, n, dens = -1000, 1000,100,100
-    generated_matrix = generate_sparse_matrix(-1000, 1000, int(sys.argv[1]), int(sys.argv[1]), float(sys.argv[2]))
-    write_matrix_to_file(-1000, 1000, 100, 100, generated_matrix)
-    # print(generated_matrix.A)
-
-
-if __name__ == '__main__':
-    main()
+def generate(first_dimension, second_dimension, density, file_id, lower_bound=-1000, upper_bound=1000):
+    if len(sys.argv) == 4:
+        # lb, ub, m, n, dens = get_user_input()
+        # generated_matrix = generate_sparse_matrix(lb, ub, m, n, dens)
+        # lb, ub, m, n, dens = -1000, 1000,100,100
+        generated_matrix = generate_sparse_matrix(-1000, 1000, int(sys.argv[1]), int(sys.argv[1]), float(sys.argv[2]))
+        write_matrix_to_file(-1000, 1000, sys.argv[1], sys.argv[2], sys.argv[3], generated_matrix)
+        # print(generated_matrix.A)
+    else:
+        # lb, ub, m, n, dens = get_user_input()
+        # generated_matrix = generate_sparse_matrix(lb, ub, m, n, dens)
+        # lb, ub, m, n, dens = -1000, 1000,100,100
+        generated_matrix = generate_sparse_matrix(lower_bound, upper_bound, first_dimension, second_dimension, density)
+        write_matrix_to_file(lower_bound, upper_bound, str(first_dimension), str(density), str(file_id), generated_matrix)
+        # print(generated_matrix.A)
