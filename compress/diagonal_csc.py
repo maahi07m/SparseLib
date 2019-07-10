@@ -5,11 +5,18 @@ import os
 import numpy as np
 # from helpers.profile import profile
 sys.path.append('../')
-from read_file.matrix_read import read_matrix_parallel
+from read_file.matrix_read import read_matrix_parallel, read_matrix_sequentially
 
 
 # @profile
-def diagonal(write_time=False, matrix_size='-', density='-', file_path='../'):
+def diagonal(matrix_size, density, file_id, parallel=True, write_time=False, file_path='../'):
+    global A
+    file_name = 'output_' + str(matrix_size) + '_' + str(density) + '_' + str(file_id) + '.txt'
+    if parallel:
+        A = np.array(read_matrix_parallel(file_name, matrix_size, density, True, 4, file_path))
+    else:
+        A = np.array(read_matrix_sequentially(file_name, matrix_size, density))
+
     LA, AD = [], [[]]
     a_length = len(A)
     start_time = time.time()
@@ -137,10 +144,14 @@ def get_main_diagonal(a_length):
         return []
 
 
-def CSC(file_name, write_time=False, matrix_size='-', density='-', file_path='../'):
-    A = np.array(read_matrix_parallel(file_name, matrix_size, density))
+def csc(matrix_size, density, file_id, parallel=True, write_time=False, file_path='../'):
+    file_name = 'output_' + str(matrix_size) + '_' + str(density) + '_' + str(file_id) + '.txt'
+    if parallel:
+        A = np.array(read_matrix_parallel(file_name, matrix_size, density, True, 4, file_path))
+    else:
+        A = np.array(read_matrix_sequentially(file_name, matrix_size, density))
     start_time = time.time()
-    AR, IA, JA = [], [], []
+    AR, IA, JA = [], [], [0]
     ne_counter = 0
     A = np.transpose(A)
     for col, line in enumerate(A):
@@ -153,6 +164,9 @@ def CSC(file_name, write_time=False, matrix_size='-', density='-', file_path='..
                 if len(JA) == 0:
                     JA.append(col)
         JA.append(ne_counter)
+    # print('AR= ', AR)
+    # print('IA = ', IA)
+    # print('JA = ', JA)
     if write_time:
         total_time = time.time() - start_time
         with open(os.path.join(file_path+'execution_results', 'execution_time.txt'), 'a') as f:
@@ -162,13 +176,13 @@ def CSC(file_name, write_time=False, matrix_size='-', density='-', file_path='..
 
 
 if __name__ == '__main__':
-    global A
-    if len(sys.argv) == 4:
-        file_name = 'output_' + sys.argv[1] + '_' + sys.argv[2] + '_' + sys.argv[3] + '.txt'
-        # A = read_matrix_parallel(file_name, sys.argv[1], sys.argv[2])
-        # AR, IA, JA = CSC(np.array(A), True, sys.argv[1], sys.argv[2])
-        # diagonal(True, sys.argv[1], sys.argv[2])
+    if len(sys.argv) == 5:
+        if sys.argv[1].lower() == 'csc':
+            AR, IA, JA = csc(sys.argv[2], sys.argv[3], sys.argv[4], True, True)
+        elif sys.argv[1].lower() == 'diagonal':
+            diagonal(sys.argv[2], sys.argv[3], sys.argv[4], True, True)
+        else:
+            AR, IA, JA = csc(sys.argv[2], sys.argv[3], sys.argv[4], True, True)
+            diagonal(sys.argv[2], sys.argv[3], sys.argv[4], True, True)
     else:
-        file_name = 'output_10_0.5_1.txt'
-        AR, IA, JA = CSC(np.array(A), True)
-        # diagonal(True)
+        print('There is no main to run')

@@ -4,6 +4,7 @@ import sys
 import os
 sys.path.append('../')
 from read_file.matrix_read import read_matrix_generator
+from helpers import generator
 import glob
 
 
@@ -11,6 +12,7 @@ def CSR(file_name, write_time=False, matrix_size='-', density='-', file_path='..
     start_time = time.time()
     AR, IA, JA = [], [], []
     IA.append(0)
+    generator.get_user_input()
     ne_counter = 0
     with open(os.path.join(file_path+'data_files', file_name), 'r') as f:
         for line in read_matrix_generator(f):
@@ -52,8 +54,9 @@ if __name__ == '__main__':
     if len(sys.argv) == 4:
         file_name = 'output_' + sys.argv[1] + '_' + sys.argv[2] + '_' + sys.argv[3] + '.txt'
         AR1, IA1, JA1 = CSR(file_name, True, sys.argv[1], sys.argv[2])
+        print(AR1, IA1, JA1)
         AR2, IA2, JA2 = COO(file_name, True, sys.argv[1], sys.argv[2])
-    else:
-        file_name = 'output_10_0.5_1.txt'
-        AR1, IA1, JA1 = CSR(file_name, True, 10, 0.5)
-        AR2, IA2, JA2 = COO(file_name, True, 10, 0.5)
+    # else:
+    #     file_name = 'output_10_0.5_1.txt'
+    #     AR1, IA1, JA1 = CSR(file_name, True, 10, 0.5)
+    #     AR2, IA2, JA2 = COO(file_name, True, 10, 0.5)
