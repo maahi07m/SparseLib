@@ -3,18 +3,20 @@ from numpy import array
 from scipy.sparse import csr_matrix
 import sys
 sys.path.append('../')
-from compress.csr_coo import CSR
+from compress.csr_coo import csr
 from read_file.matrix_read import read_matrix_parallel
 
-# file_1 = "output_1000_0.005_1.txt"
-# file_2 = "output_1000_0.005_2.txt"
-file_1 = "output_6_0.5_1.txt"
-file_2 = "output_6_0.5_2.txt"
+file_1 = "output_10_0.5_1.txt"
+file_2 = "output_10_0.5_3.txt"
+matrix_size = 10
+density = 0.5
+file_id_1 = 1
+file_id_2 = 3
 
 
 def addition_matrices_numpy():
-    A = read_matrix_parallel(file_1, '')
-    B = read_matrix_parallel(file_2, '')
+    A = read_matrix_parallel(file_1)
+    B = read_matrix_parallel(file_2)
     A = csr_matrix(array(A))
     B = csr_matrix(array(B))
 
@@ -24,7 +26,7 @@ def addition_matrices_numpy():
 
     print("numpy time : ", stop-start)
     x = total.toarray()
-    # with open("../data_files/temp.txt", 'w') as f:
+    # with open("../data_files/output_10_0.5_3.txt", 'w') as f:
     #     for item in x:
     #         for index,inner in enumerate(item):
     #             if index == item.shape[0] - 1:
@@ -32,18 +34,18 @@ def addition_matrices_numpy():
     #             else:
     #                 f.write("%s\t" % str(int(inner)), )
     #         f.write("\n")
-
-    return CSR('temp.txt')
-    # return total
+    #
+    # return csr(matrix_size, density, file_id_1+2)
+    return total.toarray()
 
 
 def addition_matrices_nxn():
-    AR, IA, JA = CSR(file_1)
+    AR, IA, JA = csr(matrix_size, density, file_id_1)
     # print(AR)
     # print(IA)
     # print(JA)
     print("-" * 100)
-    BR, IB, JB = CSR(file_2)
+    BR, IB, JB = csr(matrix_size, density, file_id_2)
     # print(BR)
     # print(IB)
     # print(JB)
@@ -103,8 +105,8 @@ def addition_matrices_nxn():
 
 
 def subtration_matrices_numpy():
-    A = read_matrix_parallel(file_1, '')
-    B = read_matrix_parallel(file_2, '')
+    A = read_matrix_parallel(file_1)
+    B = read_matrix_parallel(file_2)
     A = csr_matrix(array(A))
     B = csr_matrix(array(B))
 
@@ -113,27 +115,26 @@ def subtration_matrices_numpy():
     stop = time.time()
 
     print("numpy time : ", stop-start)
-    x = total.toarray()
-    with open("../data_files/temp.txt", 'w') as f:
-        for item in x:
-            for index,inner in enumerate(item):
-                if index == item.shape[0] - 1:
-                    f.write("%s" % str(int(inner)), )
-                else:
-                    f.write("%s\t" % str(int(inner)), )
-            f.write("\n")
-    return CSR('temp.txt')
-
-    # return total
+    # x = total.toarray()
+    # with open("../data_files/temp.txt", 'w') as f:
+    #     for item in x:
+    #         for index,inner in enumerate(item):
+    #             if index == item.shape[0] - 1:
+    #                 f.write("%s" % str(int(inner)), )
+    #             else:
+    #                 f.write("%s\t" % str(int(inner)), )
+    #         f.write("\n")
+    # return csr(matrix_size, density, file_id_1+2)
+    return total.toarray()
 
 
 def subtration_matrices_nxn():
-    AR, IA, JA = CSR(file_1)
+    AR, IA, JA = csr(matrix_size, density, file_id_1)
     # print(AR)
     # print(IA)
     # print(JA)
     print("-" * 100)
-    BR, IB, JB = CSR(file_2)
+    BR, IB, JB = csr(matrix_size, density, file_id_2)
     # print(BR)
     # print(IB)
     # print(JB)
@@ -193,8 +194,10 @@ def subtration_matrices_nxn():
 
 
 if __name__ == '__main__':
-    # npR, Inp, Jnp = subtration_matrices_numpy()
-    C, IC, JC = subtration_matrices_nxn()
+    # npR, Inp, Jnp = addition_matrices_numpy()
+    numpy_result = addition_matrices_numpy()
+
+    C, IC, JC = addition_matrices_nxn()
 
     # for x in range(len(C)):
     #     if C[x] != npR[x]:

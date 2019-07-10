@@ -3,8 +3,8 @@ import multiprocessing as mp
 import os
 
 
-def __read_file(file_name):
-    with open(os.path.join('../data_files', file_name), 'r') as f:
+def __read_file(file_name, file_path):
+    with open(os.path.join(file_path + 'data_files', file_name), 'r') as f:
         return f.read()
 
 
@@ -15,7 +15,7 @@ def __process_func(line):
 def read_matrix_parallel(file_name, matrix_length='-', density='-', write_time=False,
                          number_process=mp.cpu_count(), file_path='../'):
     start_time = time.time()
-    A = __read_file(file_name).split('\n')
+    A = __read_file(file_name, file_path).split('\n')
     A.pop()
     pool = mp.Pool(number_process)
     result = tuple(pool.map(__process_func, A))
