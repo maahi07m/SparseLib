@@ -1,4 +1,4 @@
-# To run: python3 generator.py <number of rows> <density>
+# To run: python3 generator.py <number of rows> <number of cols> <density>
 # It creates a sparse matrix with <number> of rows and columns
 import time
 import sys
@@ -67,9 +67,9 @@ def generate_sparse_matrix(lb, ub, m, n, dens):
     return generated_matrix
 
 
-def write_matrix_to_file(lower_bound, upper_bound, first_dimension, density, id, matrix, file_path):
+def write_matrix_to_file(lower_bound, upper_bound, first_dimension, second_dimension, density, id, matrix, file_path):
     # file_name = 'output' + str(lb) + "_" + str(ub) + "_" + str(m) + "_" + str(n) + ".txt"
-    file_name = 'output_' + first_dimension + '_' + density + '_' + id + '.txt'
+    file_name = 'output_' + first_dimension + '_' + second_dimension + '_' + density + '_' + id + '.txt'
     matrix = matrix.toarray()
     with open(os.path.join(file_path+'data_files', file_name), 'w') as f:
         for item in matrix:
@@ -86,20 +86,20 @@ def generate(first_dimension, second_dimension, density, file_id, lower_bound=-1
         # lb, ub, m, n, dens = get_user_input()
         # generated_matrix = generate_sparse_matrix(lb, ub, m, n, dens)
         # lb, ub, m, n, dens = -1000, 1000,100,100
-        generated_matrix = generate_sparse_matrix(-1000, 1000, int(sys.argv[1]), int(sys.argv[1]), float(sys.argv[2]))
-        write_matrix_to_file(-1000, 1000, sys.argv[1], sys.argv[2], sys.argv[3], generated_matrix, file_path=file_path)
+        generated_matrix = generate_sparse_matrix(-1000, 1000, int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]))
+        write_matrix_to_file(-1000, 1000, sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], generated_matrix, file_path=file_path)
         # print(generated_matrix.A)
     else:
         # lb, ub, m, n, dens = get_user_input()
         # generated_matrix = generate_sparse_matrix(lb, ub, m, n, dens)
         # lb, ub, m, n, dens = -1000, 1000,100,100
         generated_matrix = generate_sparse_matrix(lower_bound, upper_bound, first_dimension, second_dimension, density)
-        write_matrix_to_file(lower_bound, upper_bound, str(first_dimension), str(density), str(file_id), generated_matrix, file_path=file_path)
+        write_matrix_to_file(lower_bound, upper_bound, str(first_dimension), str(second_dimension), str(density), str(file_id), generated_matrix, file_path=file_path)
         # print(generated_matrix.A)
 
 
 if __name__ == '__main__':
     if len(sys.argv) == 6:
-        generate(int(sys.argv[1]), int(sys.argv[1]), float(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]))
+        generate(int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]))
     else:
-        generate(int(sys.argv[1]), int(sys.argv[1]), float(sys.argv[2]), int(sys.argv[3]))
+        generate(int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]))

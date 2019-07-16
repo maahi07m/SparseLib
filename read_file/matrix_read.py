@@ -12,7 +12,7 @@ def __process_func(line):
     return tuple([tuple(map(int, line.split('\t')))])[0]
 
 
-def read_matrix_parallel(file_name, matrix_length='-', density='-', write_time=False,
+def read_matrix_parallel(file_name, matrix_length_row='-', matrix_length_col='-', density='-', write_time=False,
                          number_process=mp.cpu_count(), file_path='../'):
     start_time = time.time()
     A = __read_file(file_name, file_path).split('\n')
@@ -24,11 +24,11 @@ def read_matrix_parallel(file_name, matrix_length='-', density='-', write_time=F
         total_time = time.time() - start_time
         print('parallel: ', total_time)
         with open(os.path.join(file_path + 'execution_results', 'read_time.txt'), 'a') as f:
-            f.write('parallel\t%s\t%s\t%.5f\n' % (matrix_length, density, total_time))
+            f.write('parallel\t%s\t%s\t%s\t%.5f\n' % (matrix_length_row, matrix_length_col, density, total_time))
     return result
 
 
-def read_matrix_sequentially(file_name, write_time=False, matrix_length='-', density='-'):
+def read_matrix_sequentially(file_name, write_time=False, matrix_length_row='-', matrix_length_col='-', density='-'):
     start_time = time.time()
     with open(os.path.join('..data_files', file_name), 'r') as f:
         matrix_result = tuple([tuple(map(int, line.split())) for line in f])
@@ -36,7 +36,7 @@ def read_matrix_sequentially(file_name, write_time=False, matrix_length='-', den
         total_time = time.time() - start_time
         print('sequential: ', total_time)
         with open(os.path.join('..execution_results', 'read_time.txt'), 'a') as f:
-            f.write('sequential\t%s\t%s\t%.5f\n' % (matrix_length, density, total_time))
+            f.write('sequential\t%s\t%s\t%s\t%.5f\n' % (matrix_length_row, matrix_length_col, density, total_time))
     return matrix_result
 
 

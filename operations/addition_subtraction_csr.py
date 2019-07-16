@@ -8,7 +8,8 @@ from read_file.matrix_read import read_matrix_parallel
 
 file_1 = "output_10_0.5_1.txt"
 file_2 = "output_10_0.5_3.txt"
-matrix_size = 10
+matrix_size_row = 10
+matrix_size_col = 10
 density = 0.5
 file_id_1 = 1
 file_id_2 = 3
@@ -40,12 +41,12 @@ def addition_matrices_numpy():
 
 
 def addition_matrices_nxn():
-    AR, IA, JA = csr(matrix_size, density, file_id_1)
+    AR, IA, JA = csr(matrix_size_row, matrix_size_col, density, file_id_1)
     # print(AR)
     # print(IA)
     # print(JA)
     print("-" * 100)
-    BR, IB, JB = csr(matrix_size, density, file_id_2)
+    BR, IB, JB = csr(matrix_size_row, matrix_size_col, density, file_id_2)
     # print(BR)
     # print(IB)
     # print(JB)
@@ -129,12 +130,12 @@ def subtration_matrices_numpy():
 
 
 def subtration_matrices_nxn():
-    AR, IA, JA = csr(matrix_size, density, file_id_1)
+    AR, IA, JA = csr(matrix_size_row, matrix_size_col, density, file_id_1)
     # print(AR)
     # print(IA)
     # print(JA)
     print("-" * 100)
-    BR, IB, JB = csr(matrix_size, density, file_id_2)
+    BR, IB, JB = csr(matrix_size_row, matrix_size_col, density, file_id_2)
     # print(BR)
     # print(IB)
     # print(JB)

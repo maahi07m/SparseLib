@@ -8,7 +8,8 @@ from read_file.matrix_read import read_matrix_parallel
 
 file_1 = "output_10_0.5_5.txt"
 file_2 = "output_10_0.5_9.txt"
-matrix_size = 10
+matrix_size_row = 10
+matrix_size_col = 10
 density = 0.5
 file_id_1 = 5
 file_id_2 = 9
@@ -65,12 +66,12 @@ def subtration_matrices_numpy():
 
 
 def addition_matrices_nxn():
-    AR, IA, JA = csc(matrix_size, density, file_id_1)
+    AR, IA, JA = csc(matrix_size_row, matrix_size_col, density, file_id_1)
     # print(AR)
     # print(IA)
     # print(JA)
     print("-" * 100)
-    BR, IB, JB = csc(matrix_size, density, file_id_2)
+    BR, IB, JB = csc(matrix_size_row, matrix_size_col, density, file_id_2)
     # print(BR)
     # print(IB)
     # print(JB)
@@ -130,12 +131,12 @@ def addition_matrices_nxn():
 
 
 def subtration_matrices_nxn():
-    AR, IA, JA = csc(matrix_size, density, file_id_1)
+    AR, IA, JA = csc(matrix_size_row, matrix_size_col, density, file_id_1)
     # print(AR)
     # print(IA)
     # print(JA)
     print("-" * 100)
-    BR, IB, JB = csc(matrix_size, density, file_id_2)
+    BR, IB, JB = csc(matrix_size_row, matrix_size_col, density, file_id_2)
     # print(BR)
     # print(IB)
     # print(JB)
@@ -147,8 +148,8 @@ def subtration_matrices_nxn():
     b_previous_col_index = 0
     c_nz_counter = 0
     for col_index in range(1, len(JA)):     # len(JA) = len(JB)
-        a_col_number = JA[col_index] - JA[col_index-1]  # get A's row number
-        b_col_number = JB[col_index] - JB[col_index-1]  # get B's row number
+        a_col_number = JA[col_index] - JA[col_index-1]
+        b_col_number = JB[col_index] - JB[col_index-1]
 
         new_a_col_index = a_previous_col_index + a_col_number
         new_b_col_index = b_previous_col_index + b_col_number
@@ -201,6 +202,7 @@ if __name__ == '__main__':
     print('AR= ', C)
     print('IA = ', IC)
     print('JA = ', JC)
+
     # for x in range(len(C)):
     #     if C[x] != npR[x]:
     #         print(x, C[x], npR[x])

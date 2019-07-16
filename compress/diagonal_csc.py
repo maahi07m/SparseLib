@@ -1,4 +1,4 @@
-"""To run: python3 diagonal_csc.py <size> <density> <file_id>"""
+"""To run: python3 diagonal_csc.py <size of rows> <size of colss> <density> <file_id>"""
 import time
 import sys
 import os
@@ -9,13 +9,13 @@ from read_file.matrix_read import read_matrix_parallel, read_matrix_sequentially
 
 
 # @profile
-def diagonal(matrix_size, density, file_id, parallel=True, write_time=False, file_path='../'):
+def diagonal(matrix_size_row, matrix_size_col, density, file_id, parallel=True, write_time=False, file_path='../'):
     global A
-    file_name = 'output_' + str(matrix_size) + '_' + str(density) + '_' + str(file_id) + '.txt'
+    file_name = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + str(density) + '_' + str(file_id) + '.txt'
     if parallel:
-        A = np.array(read_matrix_parallel(file_name, matrix_size, density, True, 4, file_path))
+        A = np.array(read_matrix_parallel(file_name, matrix_size_row, matrix_size_col, density, True, 4, file_path))
     else:
-        A = np.array(read_matrix_sequentially(file_name, matrix_size, density))
+        A = np.array(read_matrix_sequentially(file_name, matrix_size_row, matrix_size_col, density))
 
     LA, AD = [], [[]]
     a_length = len(A)
@@ -51,7 +51,7 @@ def diagonal(matrix_size, density, file_id, parallel=True, write_time=False, fil
     if write_time:
         total_time = time.time() - start_time
         with open(os.path.join(file_path+'execution_results', 'execution_time.txt'), 'a') as f:
-            f.write('Diagonal %s\t%s\t%.5f\n' % (matrix_size, density, total_time))
+            f.write('Diagonal %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
         print("total time : ", total_time)
     # return AD, LA
     # print(AD)
@@ -144,12 +144,12 @@ def get_main_diagonal(a_length):
         return []
 
 
-def csc(matrix_size, density, file_id, parallel=True, write_time=False, file_path='../'):
-    file_name = 'output_' + str(matrix_size) + '_' + str(density) + '_' + str(file_id) + '.txt'
+def csc(matrix_size_row, matrix_size_col, density, file_id, parallel=True, write_time=False, file_path='../'):
+    file_name = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' + str(density) + '_' + str(file_id) + '.txt'
     if parallel:
-        A = np.array(read_matrix_parallel(file_name, matrix_size, density, True, 4, file_path))
+        A = np.array(read_matrix_parallel(file_name, matrix_size_row, matrix_size_col, density, True, 4, file_path))
     else:
-        A = np.array(read_matrix_sequentially(file_name, matrix_size, density))
+        A = np.array(read_matrix_sequentially(file_name, matrix_size_row, matrix_size_col, density))
     start_time = time.time()
     AR, IA, JA = [], [], [0]
     ne_counter = 0
@@ -170,19 +170,19 @@ def csc(matrix_size, density, file_id, parallel=True, write_time=False, file_pat
     if write_time:
         total_time = time.time() - start_time
         with open(os.path.join(file_path+'execution_results', 'execution_time.txt'), 'a') as f:
-            f.write('CSC %s\t%s\t%.5f\n' % (matrix_size, density, total_time))
+            f.write('CSC %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
 
     return AR, IA, JA
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 5:
+    if len(sys.argv) == 6:
         if sys.argv[1].lower() == 'csc':
-            AR, IA, JA = csc(sys.argv[2], sys.argv[3], sys.argv[4], True, True)
+            AR, IA, JA = csc(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], True, True)
         elif sys.argv[1].lower() == 'diagonal':
-            diagonal(sys.argv[2], sys.argv[3], sys.argv[4], True, True)
-        else:
-            AR, IA, JA = csc(sys.argv[2], sys.argv[3], sys.argv[4], True, True)
-            diagonal(sys.argv[2], sys.argv[3], sys.argv[4], True, True)
+            diagonal(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], True, True)
+    elif len(sys.argv) == 5:
+        AR, IA, JA = csc(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], True, True)
+        diagonal(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], True, True)
     else:
         print('There is no main to run')
