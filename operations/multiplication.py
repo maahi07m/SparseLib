@@ -5,12 +5,15 @@ sys.path.append('../')
 from compress.csr_coo import csr
 from compress.diagonal_csc import csc
 from read_file.matrix_read import read_matrix_parallel
+import scipy.sparse as sp
+import multiprocessing as mp
+from multiprocessing import Pool
 
 
-file_1 = "output_1000_1_0.005_2.txt"
-file_2 = "output_100_50_0.005_2.txt"
-matrix_size_row = 1000
-matrix_size_col = 1000
+file_1 = "output_5000_5000_0.005_2.txt"
+file_2 = "output_5000_5000_0.005_1.txt"
+matrix_size_row = 15000
+matrix_size_col = 15000
 matrix_size_row_1 = 5000
 matrix_size_col_1 = 5000
 matrix_size_row_2 = 5000
@@ -20,57 +23,84 @@ file_id_1 = 1
 file_id_2 = 2
 
 
-# def multi_csr_matrix_dense_vector():
-#     AR, IA, JA = csr(matrix_size_row, matrix_size_col, density, file_id_1)
-#     x_vector = read_matrix_parallel(file_1)
-#     y_vector = []
-#
-#     start = time.time()
-#
-#     for index in range(len(IA) - 1):
-#         inner_index_1 = IA[index]
-#         inner_index_2 = IA[index + 1]
-#         y = 0
-#
-#         for inner_index in range(inner_index_1, inner_index_2):
-#             x_list = list(list(x_vector[JA[inner_index]]))
-#             x = x_list[0]
-#             y = y + AR[inner_index] * x
-#         y_vector.append(int(y))
-#
-#     print('time csr', time.time()-start)
-#
-#     return y_vector
+def matrix_matrix_multi():
+    AR, IA, JA = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
+    B = read_matrix_parallel(file_1)
+    CR, IC, JC = [], [0], []
+    length_b = len(B)
+    start = time.time()
+
+    for index in range(len(IA) - 1):
+        inner_index_a_1 = IA[index]
+        inner_index_a_2 = IA[index + 1]
+
+        for index_of_b in range(length_b):
+            sum_of_each_row = 0
+            for inner_index in range(inner_index_a_1, inner_index_a_2):
+                if B[JA[inner_index]][index_of_b] == 0:
+                    continue
+                sum_of_each_row += AR[inner_index] * B[JA[inner_index]][index_of_b]
+            if sum_of_each_row != 0:
+                CR.append(sum_of_each_row)
+                JC.append(index_of_b)
+        IC.append(len(CR))
+    print('time ---', time.time() - start)
+    # print(CR, IC, JC)
 
 
-# def multi_csc_matrix_dense_vector():
-#     AR, IA, JA = csc(matrix_size_row, matrix_size_col, density, file_id_1)
-#     x_vector = read_matrix_parallel(file_1)
-#     y_vector = []
-#
-#     start = time.time()
-#
-#     for index in range(len(JA) - 1):
-#         y_vector.append(0)
-#
-#     for index in range(len(JA)-1):
-#         inner_index_1 = JA[index]
-#         inner_index_2 = JA[index + 1]
-#
-#         for inner_index in range(inner_index_1, inner_index_2):
-#             x_list = list(list(x_vector[index]))
-#             x = x_list[0]
-#             y_vector[IA[inner_index]] = y_vector[IA[inner_index]] + x * AR[inner_index]
-#
-#     print('time csc', time.time() - start)
-#
-#     return y_vector
+def multi_csr_matrix_dense_vector():
+    AR, IA, JA = csr(matrix_size_row, matrix_size_col, density, file_id_1)
+    x_vector = read_matrix_parallel(file_1)
+    y_vector = []
+
+    start = time.time()
+
+    for index in range(len(IA) - 1):
+        inner_index_1 = IA[index]
+        inner_index_2 = IA[index + 1]
+        y = 0
+
+        for inner_index in range(inner_index_1, inner_index_2):
+            x_list = list(list(x_vector[JA[inner_index]]))
+            x = x_list[0]
+            y = y + AR[inner_index] * x
+        y_vector.append(y)
+
+    print('time csr', time.time()-start)
+    print(y_vector)
+
+    return y_vector
+
+
+def multi_csc_matrix_dense_vector():
+    AR, IA, JA = csc(matrix_size_row, matrix_size_col, density, file_id_1)
+    x_vector = read_matrix_parallel(file_1)
+    y_vector = []
+
+    start = time.time()
+
+    for index in range(len(JA) - 1):
+        y_vector.append(0)
+
+    for index in range(len(JA)-1):
+        inner_index_1 = JA[index]
+        inner_index_2 = JA[index + 1]
+
+        for inner_index in range(inner_index_1, inner_index_2):
+            x_list = list(list(x_vector[index]))
+            x = x_list[0]
+            y_vector[IA[inner_index]] = y_vector[IA[inner_index]] + x * AR[inner_index]
+
+    print('time csc', time.time() - start)
+
+    return y_vector
 
 
 def multi_matrix_sparse_vector():
-    AR, IA, JA = csr(matrix_size_row, matrix_size_col, density, file_id_1)
-    XR, IX, JX = csc(matrix_size_row, matrix_size_col, density, file_id_2)
+    AR, IA, JA = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
+    XR, IX, JX = csc(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
     CR, IC, JC = [], [], [0]
+    start = time.time()
     previous_ja_index = 0
 
     for index in range(1, len(IA)):
@@ -82,6 +112,8 @@ def multi_matrix_sparse_vector():
             CR.append(result_of_rows_cols)
             IC.append(index-1)
     JC.append(len(CR))
+    print('time', time.time() - start)
+    print(CR, IC, JC)
 
     return CR, IC, JC
 
@@ -108,6 +140,8 @@ def multi_sparse_vector_matrix():
 def multi_matrix_matrix():
     AR, IA, JA = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
     BR, IB, JB = csc(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
+    # print(AR, IA, JA )
+    # print(BR, IB, JB)
     start = time.time()
     CR, IC, JC = [], [0], []
     previous_index_a = 0
@@ -132,25 +166,31 @@ def multi_matrix_matrix():
                 JC.append(inner_index - 1)
                 counter_nz += 1
         IC.append(counter_nz)
+
     print(time.time() - start)
+    print(length_ia)
 
     return CR, IC, JC
 
 
 def multiply_row_col(row_indexes, row_values, vector_nz_indexes, vector_nz_values):
     result = 0
-    indexes_union = sorted(set(row_indexes).union(vector_nz_indexes))
+    length_row_index = len(row_indexes)
+    length_vector_index = len(vector_nz_indexes)
+    loop_upper_bound = max(length_row_index, length_vector_index)
     row_index = 0
     vector_index = 0
-    for index in indexes_union:
-        if index not in row_indexes:
-            vector_index += 1
-        elif index not in vector_nz_indexes:
+    for index in range(loop_upper_bound):
+        if row_indexes[row_index] < vector_nz_indexes[vector_index]:
             row_index += 1
+        elif row_indexes[row_index] > vector_nz_indexes[vector_index]:
+            vector_index += 1
         else:
             result += row_values[row_index] * vector_nz_values[vector_index]
             row_index += 1
             vector_index += 1
+        if row_index >= length_row_index or vector_index >= length_vector_index:
+            break
 
     return result
 
@@ -168,6 +208,35 @@ def fetch_inner_for_loop_values(ib, br, jb):
 
     return b_cols_list, b_values_list
 
+
+# def multiply_row_col(row_indexes, row_values, vector_nz_indexes, vector_nz_values):
+#     result = 0
+#     indexes_union = sorted(set(row_indexes).union(vector_nz_indexes))
+#     row_index = 0
+#     vector_index = 0
+#     for index in indexes_union:
+#         if index not in row_indexes:
+#             vector_index += 1
+#         elif index not in vector_nz_indexes:
+#             row_index += 1
+#         else:
+#             result += row_values[row_index] * vector_nz_values[vector_index]
+#             row_index += 1
+#             vector_index += 1
+#
+#     return result
+
+# def multiply_row_col(row_indexes, row_values, vector_nz_indexes, vector_nz_values):
+#     result = 0
+#     loop_upper_bound = max(len(row_indexes), len(vector_nz_indexes))
+#     loop_lower_bound = min(len(row_indexes), len(vector_nz_indexes)) - 1
+#     for index in range(loop_upper_bound):
+#         if index > loop_lower_bound:
+#             break
+#         if row_indexes[index] == vector_nz_indexes[index]:
+#             result += row_values[index] * vector_nz_values[index]
+#
+#     return result
 
 def inner_product_numpy():
     A = read_matrix_parallel(file_1)
@@ -236,6 +305,8 @@ def outer_product():
     # print(IC)
     # print(JC)
 
+    return CR, IC, JC
+
 
 def matrix_vector_numpy():
     A = read_matrix_parallel(file_1)
@@ -256,13 +327,35 @@ def matrix_vector():
         row_nz_number = IA[a_row_index-1: a_row_index]
 
 
+def numpy_matrix_matrix():
+    A = read_matrix_parallel(file_2)
+    B = read_matrix_parallel(file_1)
+
+    A = sp.csr_matrix(np.array(A))
+    B = np.array(B)
+    # print('starting array')
+    # A = scipy.sparse.csr_matrix(A)
+    # B = scipy.sparse.csr_matrix(B)
+    print('start time')
+    start_time = time.time()
+    # result = sp.csr_matrix(A).multiply(sp.csr_matrix(B)).todense()
+    result = A.dot(B)
+    # result = A*B
+
+    print('time', time.time() -start_time)
+
+    print(result)
+
+
 if __name__ == '__main__':
     # c_vector = multi_csc_matrix_dense_vector()
-    # c_vector = multi_csr_matrix_dense_vector()
-    # CR, IC, JC = multi_matrix_sparse_vector()
+    #c_vector = multi_csr_matrix_dense_vector()
+    #CR, IC, JC = multi_matrix_sparse_vector()
     # CR, IC, JC = multi_sparse_vector_matrix()
-    CR, IC, JC = multi_matrix_matrix()
+    # CR, IC, JC = multi_matrix_matrix()
     # inner_product()
     #  outer_product()
     # inner_product_numpy()
     # outer_product_numpy()
+    matrix_matrix_multi2()
+    #numpy_matrix_matrix()
