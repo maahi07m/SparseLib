@@ -2,17 +2,18 @@ import time
 from numpy import array
 from scipy.sparse import csc_matrix
 import sys
+import os
 sys.path.append('../')
 from compress.diagonal_csc import csc
 from read_file.matrix_read import read_matrix_parallel
 
 file_1 = "output_10_0.5_5.txt"
 file_2 = "output_10_0.5_9.txt"
-matrix_size_row = 10
-matrix_size_col = 10
-density = 0.5
-file_id_1 = 5
-file_id_2 = 9
+# matrix_size_row = 10
+# matrix_size_col = 10
+# density = 0.5
+# file_id_1 = 5
+# file_id_2 = 9
 
 
 def addition_matrices_numpy():
@@ -65,7 +66,7 @@ def subtration_matrices_numpy():
     return total.toarray()
 
 
-def addition_matrices_nxn():
+def addition_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, file_id_2):
     AR, IA, JA = csc(matrix_size_row, matrix_size_col, density, file_id_1)
     # print(AR)
     # print(IA)
@@ -77,7 +78,7 @@ def addition_matrices_nxn():
     # print(JB)
     CR, IC, JC = [], [], [0]
     print("-" * 100)
-    start = time.time()
+    start_time = time.time()
 
     a_previous_col_index = 0
     b_previous_col_index = 0
@@ -126,11 +127,13 @@ def addition_matrices_nxn():
         JC.append(c_nz_counter)
         a_previous_col_index = new_a_col_index
         b_previous_col_index = new_b_col_index
-    print(time.time() - start)
-    return CR, IC, JC
+    total_time = time.time() - start_time
+    with open(os.path.join('../execution_results', 'add_sub_time.txt'), 'a') as f:
+        f.write('addition_csc %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
+    # return CR, IC, JC
+    return [], [], []
 
-
-def subtration_matrices_nxn():
+def subtration_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, file_id_2):
     AR, IA, JA = csc(matrix_size_row, matrix_size_col, density, file_id_1)
     # print(AR)
     # print(IA)
@@ -141,8 +144,7 @@ def subtration_matrices_nxn():
     # print(IB)
     # print(JB)
     CR, IC, JC = [], [], [0]
-    print("-" * 100)
-    start = time.time()
+    start_time = time.time()
 
     a_previous_col_index = 0
     b_previous_col_index = 0
@@ -191,17 +193,27 @@ def subtration_matrices_nxn():
         JC.append(c_nz_counter)
         a_previous_col_index = new_a_col_index
         b_previous_col_index = new_b_col_index
-    print(time.time() - start)
-    return CR, IC, JC
+    total_time = time.time() - start_time
+    with open(os.path.join('../execution_results', 'add_sub_time.txt'), 'a') as f:
+        f.write('subtration_csc %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
+    # return CR, IC, JC
+    return [], [], []
 
 
 if __name__ == '__main__':
+    if len(sys.argv) == 7:
+        if sys.argv[1].lower() == 'addition':
+            AR1, IA1, JA1 = addition_matrices_nxn(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
+        elif sys.argv[1].lower() == 'subtration':
+            AR2, IA2, JA2 = subtration_matrices_nxn(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
+    elif len(sys.argv) == 6:
+        AR1, IA1, JA1 = addition_matrices_nxn(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
+        AR2, IA2, JA2 = subtration_matrices_nxn(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
+    else:
+        print("There is no main to run")
     # npR, Inp, Jnp = addition_matrices_numpy()
-    numpy_result = addition_matrices_numpy()
-    C, IC, JC = addition_matrices_nxn()
-    print('AR= ', C)
-    print('IA = ', IC)
-    print('JA = ', JC)
+    # numpy_result = addition_matrices_numpy()
+    # C, IC, JC = addition_matrices_nxn()
 
     # for x in range(len(C)):
     #     if C[x] != npR[x]:

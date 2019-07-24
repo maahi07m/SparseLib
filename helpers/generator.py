@@ -82,24 +82,17 @@ def write_matrix_to_file(lower_bound, upper_bound, first_dimension, second_dimen
 
 
 def generate(first_dimension, second_dimension, density, file_id, lower_bound=-1000, upper_bound=100, file_path='../'):
-    if len(sys.argv) == 4:
-        # lb, ub, m, n, dens = get_user_input()
-        # generated_matrix = generate_sparse_matrix(lb, ub, m, n, dens)
-        # lb, ub, m, n, dens = -1000, 1000,100,100
-        generated_matrix = generate_sparse_matrix(-1000, 1000, int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]))
-        write_matrix_to_file(-1000, 1000, sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], generated_matrix, file_path=file_path)
-        # print(generated_matrix.A)
-    else:
-        # lb, ub, m, n, dens = get_user_input()
-        # generated_matrix = generate_sparse_matrix(lb, ub, m, n, dens)
-        # lb, ub, m, n, dens = -1000, 1000,100,100
-        generated_matrix = generate_sparse_matrix(lower_bound, upper_bound, first_dimension, second_dimension, density)
-        write_matrix_to_file(lower_bound, upper_bound, str(first_dimension), str(second_dimension), str(density), str(file_id), generated_matrix, file_path=file_path)
-        # print(generated_matrix.A)
+    # lb, ub, m, n, dens = get_user_input()
+    # generated_matrix = generate_sparse_matrix(lb, ub, m, n, dens)
+    # lb, ub, m, n, dens = -1000, 1000,100,100
+    generated_matrix = generate_sparse_matrix(lower_bound, upper_bound, first_dimension, second_dimension, density)
+    write_matrix_to_file(lower_bound, upper_bound, str(first_dimension), str(second_dimension), str(density),
+                         str(file_id), generated_matrix, file_path=file_path)
+    # print(generated_matrix.A)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 6:
+    if len(sys.argv) == 7:
         generate(int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]))
     else:
         generate(int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]))

@@ -1,3 +1,4 @@
+"""This script calculate compress algorithms' average execution time """
 import sys
 import xlsxwriter
 sys.path.append('../')
