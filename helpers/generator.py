@@ -71,14 +71,16 @@ def write_matrix_to_file(lower_bound, upper_bound, first_dimension, second_dimen
     # file_name = 'output' + str(lb) + "_" + str(ub) + "_" + str(m) + "_" + str(n) + ".txt"
     file_name = 'output_' + first_dimension + '_' + second_dimension + '_' + density + '_' + id + '.txt'
     matrix = matrix.toarray()
+    data_to_write = ''
+    for item in matrix:
+        for index, inner in enumerate(item):
+            if index == item.shape[0] - 1:
+                data_to_write += str(int(inner))
+            else:
+                data_to_write += ("%s\t" % str(int(inner)))
+        data_to_write += "\n"
     with open(os.path.join(file_path+'data_files', file_name), 'w') as f:
-        for item in matrix:
-            for index,inner in enumerate(item):
-                if index == item.shape[0] - 1:
-                    f.write("%s" % str(int(inner)), )
-                else:
-                    f.write("%s\t" % str(int(inner)), )
-            f.write("\n")
+        f.write(data_to_write)
 
 
 def generate(first_dimension, second_dimension, density, file_id, lower_bound=-1000, upper_bound=100, file_path='../'):
@@ -96,3 +98,4 @@ if __name__ == '__main__':
         generate(int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]))
     else:
         generate(int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]))
+        # generate(11, 12, 0.5, 1)
