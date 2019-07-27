@@ -5,6 +5,7 @@ import sys
 import os
 import numpy as np
 from scipy.sparse import random
+import multiprocessing as mp
 
 
 def get_user_input():
@@ -71,16 +72,25 @@ def write_matrix_to_file(lower_bound, upper_bound, first_dimension, second_dimen
     # file_name = 'output' + str(lb) + "_" + str(ub) + "_" + str(m) + "_" + str(n) + ".txt"
     file_name = 'output_' + first_dimension + '_' + second_dimension + '_' + density + '_' + id + '.txt'
     matrix = matrix.toarray()
-    data_to_write = ''
-    for item in matrix:
-        for index, inner in enumerate(item):
-            if index == item.shape[0] - 1:
-                data_to_write += str(int(inner))
-            else:
-                data_to_write += ("%s\t" % str(int(inner)))
-        data_to_write += "\n"
+    number_process = mp.cpu_count()
+    pool = mp.Pool(number_process)
+    start_time = time.time()
+    data_to_write = ''.join(pool.map(__prepare_matrix, matrix))
+    pool.close()
     with open(os.path.join(file_path+'data_files', file_name), 'w') as f:
         f.write(data_to_write)
+    print(time.time() - start_time)
+
+
+def __prepare_matrix(line):
+    data_to_write = ''
+    for index, inner in enumerate(line):
+        if index == line.shape[0] - 1:
+            data_to_write += str(int(inner))
+        else:
+            data_to_write += ("%s\t" % str(int(inner)))
+    data_to_write += "\n"
+    return data_to_write
 
 
 def generate(first_dimension, second_dimension, density, file_id, lower_bound=-1000, upper_bound=100, file_path='../'):
