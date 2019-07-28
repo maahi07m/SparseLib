@@ -1,3 +1,5 @@
+"""This script reads the execution times which takes to read a matrix mxn parallel or sequentially and calculate the
+    average time for each density and dimension"""
 import sys
 sys.path.append('../')
 
@@ -46,14 +48,29 @@ def create_dicts():
 
 
 def read_exec_times():
+    """
+    Read execution times from a txt file and create a list
+    ----------------------
+    :return: a list with the execution times
+    """
     times = []
     with open('read_time.txt', 'r') as f:
         for lines in f:
             times.append(lines.split())
+
     return times
 
 
 def calculate_avg(exec_time, dict_times, type):
+    """
+    :param exec_time: list
+    :param dict_times: dictionary
+    :param type: -
+    ----------------------
+    Calculate the average time and call the function write_times to store them in a txt file
+    ----------------------
+    :return: -
+    """
     for time in exec_time:
         dict_times[time[0]][time[2]][time[1]] = dict_times[time[0]][time[2]][time[1]] + float(time[3])
 
@@ -68,6 +85,14 @@ def calculate_avg(exec_time, dict_times, type):
 
 
 def write_times(t_dict, type):
+    """
+    :param t_dict: dictionary
+    :param type: -
+    ----------------------
+
+    ----------------------
+    :return: -
+    """
     file_name = 'read_times_final.txt'
 
     with open(file_name, 'w') as f:

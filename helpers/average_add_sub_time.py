@@ -78,6 +78,11 @@ def create_dicts():
 
 
 def read_exec_times():
+    """
+    Read execution times from a txt file and create a list
+    ----------------------
+    :return: a list with the execution times
+    """
     times = []
     with open('../execution_results/add_sub_time.txt', 'r') as f:
         for lines in f:
@@ -86,6 +91,15 @@ def read_exec_times():
 
 
 def calculate_avg(exec_time, dict_times, type):
+    """
+    :param exec_time: list
+    :param dict_times: dictionary
+    :param type: -
+    ----------------------
+    Calculate the average time for each format type, density and dimension
+    ----------------------
+    :return: a dictionary with the average times
+    """
     for time in exec_time:
         dict_times[time[0]][time[3]][time[1]] = dict_times[time[0]][time[3]][time[1]] + float(time[4])
 
@@ -101,6 +115,14 @@ def calculate_avg(exec_time, dict_times, type):
 
 
 def write_times(t_dict, type):
+    """
+    :param t_dict: dictionary
+    :param type: -
+    ----------------------
+    Write average times in a txt file
+    ----------------------
+    :return: -
+    """
     file_name = '../execution_results/add_sub_times_final.txt'
 
     with open(file_name, 'w') as f:
@@ -110,6 +132,13 @@ def write_times(t_dict, type):
 
 
 def create_tables(exec_time_dicts):
+    """
+    :param exec_time_dicts: dictionary
+    ----------------------
+    Create a xlsx file with tables to present the average times
+    ----------------------
+    :return: -
+    """
     workbook = xlsxwriter.Workbook('../execution_results/add_sub_exec_times_table.xlsx')
     worksheet = workbook.add_worksheet()
     caption = 'Addition and Subtraction time'

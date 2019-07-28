@@ -1,4 +1,4 @@
-"""To run: python3 diagonal_csc.py <size of rows> <size of colss> <density> <file_id>"""
+"""To run: python3 diagonal_csc.py <size of rows> <size of cols> <density> <file_id>"""
 import time
 import sys
 import os
@@ -10,6 +10,20 @@ from read_file.matrix_read import read_matrix_parallel, read_matrix_sequentially
 
 # @profile
 def diagonal(matrix_size_row, matrix_size_col, density, file_id, parallel=True, write_time=False, file_path='../'):
+    """
+    :param matrix_size_row: int
+    :param matrix_size_col: int
+    :param density: float
+    :param file_id: int
+    :param parallel: boolean
+    :param write_time: boolean
+    :param file_path: string
+    ----------------------
+
+    ----------------------
+    :return: two lists AD, LA, the first one contains the non zero values, the second one contains pointers for each
+    diagonal about the range from the main diagonal
+    """
     global A
     file_name = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + str(density) + '_' + str(file_id) + '.txt'
     if parallel:
@@ -53,9 +67,8 @@ def diagonal(matrix_size_row, matrix_size_col, density, file_id, parallel=True, 
         with open(os.path.join(file_path+'execution_results', 'execution_time.txt'), 'a') as f:
             f.write('Diagonal %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
         print("total time : ", total_time)
-    # return AD, LA
-    # print(AD)
-    # print(LA)
+
+    return AD, LA
 
 
 def create_ad_with_main_diagonal(AD, main_diagonal, upper_diagonals, lower_diagonals, a_length):
@@ -145,6 +158,22 @@ def get_main_diagonal(a_length):
 
 
 def csc(matrix_size_row, matrix_size_col, density, file_id, parallel=True, write_time=False, file_path='../'):
+    """
+    :param matrix_size_row: int
+    :param matrix_size_col: int
+    :param density: float
+    :param file_id: int
+    :param parallel: boolean
+    :param write_time: boolean
+    :param file_path: string
+    ----------------------
+    Convert a matrix 1-d, 2-d to csc format write the execution time in a txt file, if parallel the initial matrix will
+    be read parallel otherwise sequentially
+    ----------------------
+    :return: three lists AR, IA, JA, the first one contains the non zero values, the second one the row-pointers for
+    each non zero value, the third one contains the number of non zero values in a line (always the first element is 0
+    and the last one the number of rows + 1)
+    """
     file_name = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' + str(density) + '_' + str(file_id) + '.txt'
     if parallel:
         A = np.array(read_matrix_parallel(file_name, matrix_size_row, matrix_size_col, density, True, 4, file_path))
@@ -164,11 +193,9 @@ def csc(matrix_size_row, matrix_size_col, density, file_id, parallel=True, write
                 if len(JA) == 0:
                     JA.append(col)
         JA.append(ne_counter)
-    # print('AR= ', AR)
-    # print('IA = ', IA)
-    # print('JA = ', JA)
+    total_time = time.time() - start_time
+
     if write_time:
-        total_time = time.time() - start_time
         with open(os.path.join(file_path+'execution_results', 'execution_time.txt'), 'a') as f:
             f.write('CSC %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
 

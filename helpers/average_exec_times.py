@@ -84,18 +84,33 @@ def create_dicts():
 
 
 def read_exec_times():
+    """
+    Read execution times from a txt file and create a list
+    ----------------------
+    :return: a list with the execution times
+    """
     times = []
     with open('execution_time.txt', 'r') as f:
         for lines in f:
             times.append(lines.split())
+
     return times
 
 
 def calculate_avg(exec_time, dict_times, type):
+    """
+    :param exec_time: list
+    :param dict_times: dictionary
+    :param type: -
+    ----------------------
+    Calculate the average time for each format type, density and dimension
+    ----------------------
+    :return: a dictionary with the average times
+    """
     for time in exec_time:
         dict_times[time[0]][time[2]][time[1]] = dict_times[time[0]][time[2]][time[1]] + float(time[3])
 
-    print(dict_times)
+    # print(dict_times)
 
     for index in dict_times:
         for inner_index in dict_times[index]:
@@ -103,10 +118,19 @@ def calculate_avg(exec_time, dict_times, type):
                 dict_times[index][inner_index][inner_inner_index] /= 10
     print(dict_times)
     write_times(dict_times, type)
+
     return dict_times
 
 
 def write_times(t_dict, type):
+    """
+    :param t_dict: dictionary
+    :param type: -
+    ----------------------
+    Write average times in a txt file
+    ----------------------
+    :return: -
+    """
     file_name = 'exec_times_final.txt'
 
     with open(file_name, 'w') as f:
@@ -116,6 +140,13 @@ def write_times(t_dict, type):
 
 
 def create_tables(exec_time_dicts):
+    """
+    :param exec_time_dicts: dictionary
+    ----------------------
+    Create a xlsx file with tables to present the average times
+    ----------------------
+    :return: -
+    """
     workbook = xlsxwriter.Workbook('seq_execution_times_table.xlsx')
     worksheet = workbook.add_worksheet()
     caption = 'Sequential execution time'
