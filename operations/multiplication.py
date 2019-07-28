@@ -1,16 +1,15 @@
 """ This script contains all the multiplies of matrices inner, outer, matrix-vector, vector-matrix, matrix-matrix """
-import time
-import sys
 import os
-import scipy.sparse as sp
-import numpy as np
+import sys
+import time
+
 sys.path.append('../')
 from compress.csr_coo import csr
 from compress.diagonal_csc import csc
-from read_file.matrix_read import read_matrix_parallel
 
 
-def inner_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2, matrix_size_col_2, file_id_2):
+def inner_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2, matrix_size_col_2,
+                  file_id_2):
     """
     :param matrix_size_row_1:
     :param matrix_size_col_1:
@@ -26,29 +25,34 @@ def inner_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matr
     ----------------------
     :return: a number
     """
-    AR, IA, JA = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
-    BR, IB, JB = csr(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
-    start_time = time.time()
-    output = 0
-    loop_bound = len(IA)    # len(IA) == len(IB)
-    for row in range(1, loop_bound):
-        ia_value = IA[row]
-        a_nz = ia_value - IA[row - 1]
-        if a_nz == 0:
-            continue
-        ib_value = IB[row]
-        b_nz = ib_value - IB[row - 1]
-        if b_nz == 0:
-            continue
-        output += AR[ia_value - 1] * BR[ib_value - 1]
-    total_time = time.time() - start_time
-    with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
-        f.write('inner product %s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
+    if matrix_size_row_1 == matrix_size_row_2 and matrix_size_col_1 == matrix_size_col_2:
+        ar, ia, ja = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
+        br, ib, jb = csr(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
+        start_time = time.time()
+        output = 0
+        loop_bound = len(ia)  # len(ia) == len(ib)
+        for row in range(1, loop_bound):
+            ia_value = ia[row]
+            a_nz = ia_value - ia[row - 1]
+            if a_nz == 0:
+                continue
+            ib_value = ib[row]
+            b_nz = ib_value - ib[row - 1]
+            if b_nz == 0:
+                continue
+            output += ar[ia_value - 1] * br[ib_value - 1]
+        total_time = time.time() - start_time
+        with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
+            f.write('inner product\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
 
-    return output
+        return output
+    else:
+        raise UserWarning('Probably wrong input. Expected <matrix_size_row_1> and <matrix_size_row_2> to be equal and '
+                          '<matrix_size_col_1> and <matrix_size_col_2> to be equal too')
 
 
-def outer_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2, matrix_size_col_2, file_id_2):
+def outer_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2, matrix_size_col_2,
+                  file_id_2):
     """
     :param matrix_size_row_1:
     :param matrix_size_col_1:
@@ -62,151 +66,32 @@ def outer_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matr
     ----------------------
     Convert A matrix in csc format and B matrix in csr format, ...
     ----------------------
-    :return: three list CR< IC, JC, is the result-matrix in csr format
+    :return: three list cr< ic, jc, is the result-matrix in csr format
     """
     '''1xn 1xn both'''
-    AR, IA, JA = csc(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
-    BR, IB, JB = csr(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
-    start_time = time.time()
-    CR, IC, JC = [], [0], []
+    if matrix_size_row_1 == matrix_size_row_2 and matrix_size_col_1 == matrix_size_col_2:
+        ar, ia, ja = csc(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
+        br, ib, jb = csr(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
+        start_time = time.time()
+        cr, ic, jc = [], [0], []
 
-    for a_value in AR:
-        for b_value in BR:
-            CR.append(a_value * b_value)
-    IC = [ja_value * len(BR) for ja_value in JA]
-    JC = JB * len(AR)
-    total_time = time.time() - start_time
-    with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
-        f.write('outer product %s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
+        for a_value in ar:
+            for b_value in br:
+                cr.append(a_value * b_value)
+        ic = [ja_value * len(br) for ja_value in ja]
+        jc = jb * len(ar)
+        total_time = time.time() - start_time
+        with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
+            f.write('outer product\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
 
-    return CR, IC, JC
-
-
-def multi_matrix_dense_matrix(matrix_size_row_1, matrix_size_col_1, density, file_id_1, file):
-    """
-    :param matrix_size_row_1: int
-    :param matrix_size_col_1: int
-    :param density: float
-    :param file_id_1: int
-    :param file: string
-    ----------------------
-    input must be: matrix nxm, matrix mxn
-    ----------------------
-    Convert the one matrix in csr format and the other is stored as tuple, for the non zero values in each row
-    (A matrix) multiply with the values in JA[index] position in all cols (B matrix) algorithm based on SpMV
-    ----------------------
-    :return: three lists CR, IC, JC, is the result of the multiplication saved in csr format
-    """
-    AR, IA, JA = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
-    B = read_matrix_parallel(file)
-    CR, IC, JC = [], [0], []
-    length_b = len(B[0])
-    start_time = time.time()
-
-    for index in range(len(IA) - 1):
-        inner_index_a_1 = IA[index]
-        inner_index_a_2 = IA[index + 1]
-
-        if inner_index_a_1 == inner_index_a_2:
-            continue
-
-        for index_of_b in range(length_b):
-            sum_of_each_row = 0
-
-            for inner_index in range(inner_index_a_1, inner_index_a_2):
-                if B[JA[inner_index]][index_of_b] == 0:
-                    continue
-                sum_of_each_row += AR[inner_index] * B[JA[inner_index]][index_of_b]
-
-            if sum_of_each_row != 0:
-                CR.append(sum_of_each_row)
-                JC.append(index_of_b)
-        IC.append(len(CR))
-    total_time = time.time() - start_time
-    with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
-        f.write('SpMM alg %s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
-
-    return CR, IC, JC
+        return cr, ic, jc
+    else:
+        raise UserWarning('Probably wrong input. Expected <matrix_size_row_1> and <matrix_size_row_2> to be equal and '
+                          '<matrix_size_col_1> and <matrix_size_col_2> to be equal too')
 
 
-def multi_csr_matrix_dense_vector(matrix_size_row_1, matrix_size_col_1, density, file_id_1, file):
-    """
-    :param matrix_size_row_1: int
-    :param matrix_size_col_1: int
-    :param density: float
-    :param file_id_1: int
-    :param file: string
-    ----------------------
-    input must be: vector nx1, vector nx1
-    ----------------------
-    Convert the matrix in csr format, for the non zero values in each row(A matrix, use the IA) multiply with the
-    values in JA[index] position in the sparse vector based on SpMV algorithm
-    ----------------------
-    :return: a list which represent a sparse vector
-    """
-    AR, IA, JA = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
-    x_vector = read_matrix_parallel(file)
-    y_vector = []
-    start_time = time.time()
-
-    for index in range(len(IA) - 1):
-        inner_index_1 = IA[index]
-        inner_index_2 = IA[index + 1]
-        y = 0
-
-        for inner_index in range(inner_index_1, inner_index_2):
-            x_list = list(list(x_vector[JA[inner_index]]))
-            x = x_list[0]
-            y = y + AR[inner_index] * x
-        y_vector.append(y)
-
-    total_time = time.time() - start_time
-    with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
-        f.write('SpMV alg csr %s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
-
-    return y_vector
-
-
-def multi_csc_matrix_dense_vector(matrix_size_row_1, matrix_size_col_1, density, file_id_1, file):
-    """
-    :param matrix_size_row_1: int
-    :param matrix_size_col_1: int
-    :param density: float
-    :param file_id_1: int
-    :param file: string
-    ----------------------
-    input must be: vector nx1, vector nx1
-    ----------------------
-    Convert the matrix in csc format, for the non zero values in each col(A matrix, use the JA) multiply with the
-    values in JA[index] position in the sparse vector based on SpMV algorithm
-    ----------------------
-    :return: a list which represent a sparse vector
-    """
-    AR, IA, JA = csc(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
-    x_vector = read_matrix_parallel(file)
-    y_vector = []
-    start_time = time.time()
-
-    for index in range(len(JA) - 1):
-        y_vector.append(0)
-
-    for index in range(len(JA)-1):
-        inner_index_1 = JA[index]
-        inner_index_2 = JA[index + 1]
-
-        for inner_index in range(inner_index_1, inner_index_2):
-            x_list = list(list(x_vector[index]))
-            x = x_list[0]
-            y_vector[IA[inner_index]] = y_vector[IA[inner_index]] + x * AR[inner_index]
-
-    total_time = time.time() - start_time
-    with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
-        f.write('SpMV alg csc %s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
-
-    return y_vector
-
-
-def multi_matrix_sparse_vector(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2, matrix_size_col_2, file_id_2):
+def multiply_matrix_vector(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2,
+                           matrix_size_col_2, file_id_2):
     """
     :param matrix_size_row_1: int
     :param matrix_size_col_1: int
@@ -216,36 +101,42 @@ def multi_matrix_sparse_vector(matrix_size_row_1, matrix_size_col_1, density, fi
     :param matrix_size_col_2: int
     :param file_id_2: int
     ----------------------
-    input must be: vector nx1, vector nx1
+    input must be: matrix mxn and vector nx1
     ----------------------
     Convert the A matrix in csr format and the B matrix in csc format, usage of multiply_row_col function to multiply
     ----------------------
-    :return: three lists CR, IC, JC, is the result in csc format stored
+    :return: three lists cr, ic, jc, is the result in csc format stored
     """
-    AR, IA, JA = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
-    XR, IX, JX = csc(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
-    CR, IC, JC = [], [], [0]
-    start_time = time.time()
-    previous_ja_index = 0
+    if matrix_size_col_1 == matrix_size_row_2 and matrix_size_col_2 == 1:
+        ar, ia, ja = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
+        xr, ix, jx = csc(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
+        cr, ic, jc = [], [], [0]
+        start_time = time.time()
+        previous_ja_index = 0
 
-    for index in range(1, len(IA)):
-        nz_number = IA[index] - IA[index - 1]
-        new_ja_index = previous_ja_index + nz_number
-        result_of_rows_cols = multiply_row_col(JA[previous_ja_index:new_ja_index], AR[previous_ja_index:new_ja_index], IX, XR)
-        previous_ja_index = new_ja_index
-        if result_of_rows_cols:
-            CR.append(result_of_rows_cols)
-            IC.append(index-1)
-    JC.append(len(CR))
+        for index in range(1, len(ia)):
+            nz_number = ia[index] - ia[index - 1]
+            new_ja_index = previous_ja_index + nz_number
+            result_of_rows_cols = multiply_row_col(ja[previous_ja_index:new_ja_index],
+                                                   ar[previous_ja_index:new_ja_index], ix, xr)
+            previous_ja_index = new_ja_index
+            if result_of_rows_cols:
+                cr.append(result_of_rows_cols)
+                ic.append(index - 1)
+        jc.append(len(cr))
 
-    total_time = time.time() - start_time
-    with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
-        f.write('Matrix sparse-vector  %s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
+        total_time = time.time() - start_time
+        with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
+            f.write('matrix-vector\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
 
-    return CR, IC, JC
+        return cr, ic, jc
+    else:
+        raise UserWarning('Probably wrong input. Expected <matrix_size_col_1> and <matrix_size_row_2> to be equal and '
+                          '<matrix_size_col_2> to be equal with 1')
 
 
-def multi_sparse_vector_matrix(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2, matrix_size_col_2, file_id_2):
+def multiply_vector_matrix(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2,
+                           matrix_size_col_2, file_id_2):
     """
     :param matrix_size_row_1: int
     :param matrix_size_col_1: int
@@ -255,32 +146,41 @@ def multi_sparse_vector_matrix(matrix_size_row_1, matrix_size_col_1, density, fi
     :param matrix_size_col_2: int
     :param file_id_2: int
     ----------------------
-    input must be: vector nx1, vector nx1
+    input must be: matrix nxm, vector 1nx
     ----------------------
     Convert the A matrix in csc format and the B matrix in csr format, usage of multiply_row_col function to multiply
     ----------------------
-    :return: three lists CR, IC, JC, is the result in csr format stored
+    :return: three lists cr, ic, jc, is the result in csr format stored
     """
-    AR, IA, JA = csc(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
-    XR, IX, JX = csr(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
-    CR, IC, JC = [], [0], []
+    ar, ia, ja = csc(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
+    xr, ix, jx = csr(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
+    cr, ic, jc = [], [0], []
     previous_ia_index = 0
-    start = time.time()
+    start_time = time.time()
 
-    for index in range(1, len(JA)):
-        nz_number = JA[index] - JA[index - 1]
+    for index in range(1, len(ja)):
+        nz_number = ja[index] - ja[index - 1]
+        if nz_number == 0:
+            continue
         new_ia_index = previous_ia_index + nz_number
-        result_of_rows_cols = multiply_row_col(IA[previous_ia_index:new_ia_index], AR[previous_ia_index:new_ia_index], JX, XR)
+        result_of_rows_cols = multiply_row_col(ia[previous_ia_index:new_ia_index], ar[previous_ia_index:new_ia_index],
+                                               jx, xr)
         previous_ia_index = new_ia_index
         if result_of_rows_cols:
-            CR.append(result_of_rows_cols)
-            JC.append(index - 1)
-    IC.append(len(CR))
-    print('time S_V_M', time.time() - start)
+            cr.append(result_of_rows_cols)
+            jc.append(index - 1)
 
-    return CR, IC, JC
+    ic.append(len(cr))
+    total_time = time.time() - start_time
+    with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
+        f.write('vector-matrix\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
+
+    return cr, ic, jc
 
 
+# TODO: tests , change dictionary to be passed from function caller, comments
+# TODO: sparse matrix comments and write
+# TODO: check again matrix vector multiplication
 def multiply_row_col(row_indexes, row_values, vector_nz_indexes, vector_nz_values):
     """
     :param row_indexes: list
@@ -294,27 +194,52 @@ def multiply_row_col(row_indexes, row_values, vector_nz_indexes, vector_nz_value
     :return: the result of a row/col multiply by a sparse vectors elements
     """
     result = 0
-    length_row_index = len(row_indexes)
-    length_vector_index = len(vector_nz_indexes)
-    loop_upper_bound = max(length_row_index, length_vector_index)
-    row_index = 0
-    vector_index = 0
-    for index in range(loop_upper_bound):
-        if row_indexes[row_index] < vector_nz_indexes[vector_index]:
-            row_index += 1
-        elif row_indexes[row_index] > vector_nz_indexes[vector_index]:
-            vector_index += 1
-        else:
-            result += row_values[row_index] * vector_nz_values[vector_index]
-            row_index += 1
-            vector_index += 1
-        if row_index >= length_row_index or vector_index >= length_vector_index:
-            break
+    row_nz_values = {}
+    for index, value in enumerate(row_indexes):
+        row_nz_values[value] = row_values[index]
+
+    for index, value in enumerate(vector_nz_indexes):
+        if value in row_nz_values:
+            result += row_nz_values[value] * vector_nz_values[index]
 
     return result
 
 
-def multi_matrix_matrix(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2, matrix_size_col_2, file_id_2):
+# def multiply_row_col(row_indexes, row_values, vector_nz_indexes, vector_nz_values):
+#     """
+#     :param row_indexes: list
+#     :param row_values: list
+#     :param vector_nz_indexes: list
+#     :param vector_nz_values: list
+#     ----------------------
+#     A loop in the max length of indexes lists multiply only when the elements in indexes lists is the same
+#     based in inner algorithm we found
+#     ----------------------
+#     :return: the result of a row/col multiply by a sparse vectors elements
+#     """
+#     result = 0
+#     length_row_index = len(row_indexes)
+#     length_vector_index = len(vector_nz_indexes)
+#     loop_upper_bound = max(length_row_index, length_vector_index)
+#     row_index = 0
+#     vector_index = 0
+#     for index in range(loop_upper_bound):
+#         if row_indexes[row_index] < vector_nz_indexes[vector_index]:
+#             row_index += 1
+#         elif row_indexes[row_index] > vector_nz_indexes[vector_index]:
+#             vector_index += 1
+#         else:
+#             result += row_values[row_index] * vector_nz_values[vector_index]
+#             row_index += 1
+#             vector_index += 1
+#         if row_index >= length_row_index or vector_index >= length_vector_index:
+#             break
+#
+#     return result
+
+
+def multiply_matrix_matrix(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2,
+                           matrix_size_col_2, file_id_2):
     """
     :param matrix_size_row_1: int
     :param matrix_size_col_1: int
@@ -328,44 +253,48 @@ def multi_matrix_matrix(matrix_size_row_1, matrix_size_col_1, density, file_id_1
     function create the b_cols_list containing the number of non zero values in each cols in B matrix to use it
     in multiply_row_col_for_matrix_multi to multiply with the non zero values of A matrix
     ----------------------
-    :return: three lists CR, IC, JC, is the result of the multiplication in csr format stored
+    :return: three lists cr, ic, jc, is the result of the multiplication in csr format stored
     """
-    AR, IA, JA = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
-    BR, IB, JB = csc(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
-    CR, IC, JC = [], [0], []
-    previous_index_a = 0
-    counter_nz = 0
+    if matrix_size_col_1 == matrix_size_row_2:
+        ar, ia, ja = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
+        br, ib, jb = csc(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
+        cr, ic, jc = [], [0], []
+        previous_index_a = 0
+        counter_nz = 0
 
-    start = time.time()
-    b_cols_list = fetch_inner_for_loop_values(IB, BR, JB)
-    length_jb = len(b_cols_list)
-    length_ia = len(IA)
+        start_time = time.time()
+        b_cols_list = fetch_inner_for_loop_values(ib, br, jb)
+        length_jb = len(b_cols_list)
+        length_ia = len(ia)
 
-    for index in range(1, length_ia):
-        nz_number_a = IA[index] - IA[index - 1]
-        if nz_number_a == 0:
-            continue
-        new_index_a = previous_index_a + nz_number_a
-        a_rows = JA[previous_index_a:new_index_a]
-        a_values = AR[previous_index_a:new_index_a]
-        previous_index_a = new_index_a
+        for index in range(1, length_ia):
+            nz_number_a = ia[index] - ia[index - 1]
+            if nz_number_a == 0:
+                continue
+            new_index_a = previous_index_a + nz_number_a
+            a_rows = ja[previous_index_a:new_index_a]
+            a_values = ar[previous_index_a:new_index_a]
+            previous_index_a = new_index_a
 
-        for inner_index in range(length_jb):
-            result = multiply_row_col_for_matrix_multi(a_rows, a_values, b_cols_list[inner_index])
+            for inner_index in range(length_jb):
+                result = multiply_row_col_for_matrix_matrix_multiplication(a_rows, a_values, b_cols_list[inner_index])
 
-            if result:
-                CR.append(result)
-                JC.append(inner_index - 1)
-                counter_nz += 1
-        IC.append(counter_nz)
+                if result:
+                    cr.append(result)
+                    jc.append(inner_index - 1)
+                    counter_nz += 1
+            ic.append(counter_nz)
 
-    print(time.time() - start)
-    print(length_ia)
+            total_time = time.time() - start_time
+            with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
+                f.write(
+                    'matrix-matrix\t%s\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, matrix_size_col_2,
+                                                               density, total_time))
+    else:
+        raise UserWarning('Probably wrong input. Expected <matrix_size_col_1> and <matrix_size_row_2> to be equal')
 
-    return CR, IC, JC
 
-
-def multiply_row_col_for_matrix_multi(row_indexes, row_values, vector_nz):
+def multiply_row_col_for_matrix_matrix_multiplication(row_indexes, row_values, vector_nz):
     """
     :param row_indexes: list
     :param row_values: list
@@ -405,3 +334,7 @@ def fetch_inner_for_loop_values(ib, br, jb):
         previous_index_b = new_index_b
 
     return b_cols_list
+
+
+if __name__ == '__main__':
+    inner_product(2, 1, 1, 3, 1, 1, 2)
