@@ -1,4 +1,4 @@
-# To run: python3 generator.py <number of rows> <number of cols> <density>
+"""To run: python3 generator.py <number of rows> <number of cols> <density> <id of matrix-file>"""
 # It creates a sparse matrix with <number> of rows and columns
 import time
 import sys
@@ -9,6 +9,11 @@ import multiprocessing as mp
 
 
 def get_user_input():
+    """
+    Simple user interface in command line for matrix creation
+    ----------------------
+    :return: lower bound, upper bound, number of rows, number of cols, density
+    """
     will_bounds = input('Do you want to give the bounds for the matrix? Y/n \n')
     if will_bounds.lower() == 'y':
         while True:
@@ -61,6 +66,17 @@ def get_user_input():
 
 
 def generate_sparse_matrix(lb, ub, m, n, dens):
+    """
+    :param lb: int
+    :param ub: int
+    :param m: int
+    :param n: int
+    :param dens: float
+    ----------------------
+    Generate a sparse matrix mxn
+    ----------------------
+    :return: sparse matrix
+    """
     # np.random.seed(2)
     np.random.seed(int(time.time()))
     temp_matrix = random(m, n, format='csr', density=dens)
@@ -69,6 +85,20 @@ def generate_sparse_matrix(lb, ub, m, n, dens):
 
 
 def write_matrix_to_file(lower_bound, upper_bound, first_dimension, second_dimension, density, id, matrix, file_path):
+    """
+    :param lower_bound: int
+    :param upper_bound: int
+    :param first_dimension: int
+    :param second_dimension: int
+    :param density: float
+    :param id: int
+    :param matrix: list
+    :param file_path: string
+    ----------------------
+    Store in data files a txt file containing the generated matrix mxn with name e.g. "output_1000_1000_0.005_1.txt"
+    ----------------------
+    :return: -
+    """
     # file_name = 'output' + str(lb) + "_" + str(ub) + "_" + str(m) + "_" + str(n) + ".txt"
     file_name = 'output_' + first_dimension + '_' + second_dimension + '_' + density + '_' + id + '.txt'
     matrix = matrix.toarray()
@@ -94,6 +124,20 @@ def __prepare_matrix(line):
 
 
 def generate(first_dimension, second_dimension, density, file_id, lower_bound=-1000, upper_bound=100, file_path='../'):
+    """
+    :param first_dimension: int
+    :param second_dimension: int
+    :param density: float
+    :param file_id: int
+    :param lower_bound: int
+    :param upper_bound: int
+    :param file_path: string
+    ----------------------
+    Helper function to call generated_matrix to create the sparse matrix and write_matrix_to_file to save the matrix in
+    a txt file
+    ----------------------
+    :return: -
+    """
     # lb, ub, m, n, dens = get_user_input()
     # generated_matrix = generate_sparse_matrix(lb, ub, m, n, dens)
     # lb, ub, m, n, dens = -1000, 1000,100,100
@@ -108,4 +152,3 @@ if __name__ == '__main__':
         generate(int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]))
     else:
         generate(int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]))
-        # generate(11, 12, 0.5, 1)
