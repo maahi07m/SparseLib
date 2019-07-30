@@ -22,7 +22,7 @@ def __process_func(line):
     """
     :param line: line of the txt file string
      ----------------------
-    :return: the line splitted by tabs
+    :return: the line split by tabs
     """
     return tuple([tuple(map(int, line.split('\t')))])[0]
 

@@ -24,23 +24,23 @@ def addition_matrices_numpy(matrix_size_row, matrix_size_col, density, file_id_1
     :return: result of the addition stored in numpy array format
     """
     file_1 = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' + str(density) + '_' + \
-                str(file_id_1) + '.txt'
+             str(file_id_1) + '.txt'
     file_2 = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' + str(density) + '_' + \
              str(file_id_2) + '.txt'
-    A = read_matrix_parallel(file_1)
-    B = read_matrix_parallel(file_2)
-    A = csr_matrix(array(A))
-    B = csr_matrix(array(B))
+    a_matrix = read_matrix_parallel(file_1)
+    b_matrix = read_matrix_parallel(file_2)
+    a_matrix = csr_matrix(array(a_matrix))
+    b_matrix = csr_matrix(array(b_matrix))
 
     start_time = time.time()
-    total = A + B
+    total = a_matrix + b_matrix
     total_time = time.time() - start_time
 
     if not os.path.exists('../execution_results'):
         os.makedirs('../execution_results')
     with open(os.path.join('../execution_results', 'add_sub_numpy_time.txt'), 'a') as f:
         f.write('addition_numpy_csr %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
-    x = total.toarray()
+    # x = total.toarray()
     # with open("../data_files/output_10_0.5_3.txt", 'w') as f:
     #     for item in x:
     #         for index,inner in enumerate(item):
@@ -64,25 +64,25 @@ def addition_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, 
     ----------------------
     :return: the result of the addition of two matrices stored in csr format
     """
-    AR, IA, JA = csr(matrix_size_row, matrix_size_col, density, file_id_1)
-    BR, IB, JB = csr(matrix_size_row, matrix_size_col, density, file_id_2)
-    CR, IC, JC = [], [0], []
+    ar, ia, ja = csr(matrix_size_row, matrix_size_col, density, file_id_1)
+    br, ib, jb = csr(matrix_size_row, matrix_size_col, density, file_id_2)
+    cr, ic, jc = [], [0], []
     start_time = time.time()
 
     a_previous_row_index = 0
     b_previous_row_index = 0
     c_nz_counter = 0
-    for row_index in range(1, len(IA)):     # len(IA) = len(IB)
-        a_row_number = IA[row_index] - IA[row_index-1]  # get A's row number
-        b_row_number = IB[row_index] - IB[row_index-1]  # get B's row number
+    for row_index in range(1, len(ia)):  # len(ia) = len(ib)
+        a_row_number = ia[row_index] - ia[row_index - 1]  # get A's row number
+        b_row_number = ib[row_index] - ib[row_index - 1]  # get B's row number
 
         new_a_row_index = a_previous_row_index + a_row_number
         new_b_row_index = b_previous_row_index + b_row_number
 
-        a_columns = JA[a_previous_row_index: new_a_row_index]
-        b_columns = JB[b_previous_row_index: new_b_row_index]
-        a_values = AR[a_previous_row_index: new_a_row_index]
-        b_values = BR[b_previous_row_index: new_b_row_index]
+        a_columns = ja[a_previous_row_index: new_a_row_index]
+        b_columns = jb[b_previous_row_index: new_b_row_index]
+        a_values = ar[a_previous_row_index: new_a_row_index]
+        b_values = br[b_previous_row_index: new_b_row_index]
 
         a_value_index = 0
         b_value_index = 0
@@ -92,13 +92,13 @@ def addition_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, 
         all_columns = sorted(set(a_columns + b_columns))
         for index in all_columns:
             if index in distinct_a:
-                CR.append(a_values[a_value_index])
-                JC.append(index)
+                cr.append(a_values[a_value_index])
+                jc.append(index)
                 a_value_index += 1
                 c_nz_counter += 1
             elif index in distinct_b:
-                CR.append(b_values[b_value_index])
-                JC.append(index)
+                cr.append(b_values[b_value_index])
+                jc.append(index)
                 b_value_index += 1
                 c_nz_counter += 1
             elif index in common_col:
@@ -108,12 +108,12 @@ def addition_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, 
                     b_value_index += 1
                     continue
                 else:
-                    CR.append(new_value)
-                    JC.append(index)
+                    cr.append(new_value)
+                    jc.append(index)
                     a_value_index += 1
                     b_value_index += 1
                     c_nz_counter += 1
-        IC.append(c_nz_counter)
+        ic.append(c_nz_counter)
         a_previous_row_index = new_a_row_index
         b_previous_row_index = new_b_row_index
     total_time = time.time() - start_time
@@ -121,7 +121,7 @@ def addition_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, 
         os.makedirs('../execution_results')
     with open(os.path.join('../execution_results', 'add_sub_time.txt'), 'a') as f:
         f.write('addition_csr %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
-    # return CR, IC, JC
+    # return cr, ic, jc
     return [], [], []
 
 
@@ -136,16 +136,16 @@ def subtraction_matrices_numpy(matrix_size_row, matrix_size_col, density, file_i
     :return: the result of the subtraction stored in numpy array
     """
     file_1 = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' + str(density) + '_' + \
-                str(file_id_1) + '.txt'
+             str(file_id_1) + '.txt'
     file_2 = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' + str(density) + '_' + \
-                str(file_id_2) + '.txt'
-    A = read_matrix_parallel(file_1)
-    B = read_matrix_parallel(file_2)
-    A = csr_matrix(array(A))
-    B = csr_matrix(array(B))
+             str(file_id_2) + '.txt'
+    a_matrix = read_matrix_parallel(file_1)
+    b_matrix = read_matrix_parallel(file_2)
+    a_matrix = csr_matrix(array(a_matrix))
+    b_matrix = csr_matrix(array(b_matrix))
 
     start_time = time.time()
-    total = A - B
+    total = a_matrix - b_matrix
     total_time = time.time() - start_time
 
     if not os.path.exists('../execution_results'):
@@ -175,25 +175,25 @@ def subtraction_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_
     ----------------------
     :return: the result of the subtraction of two matrices stored in csr format
     """
-    AR, IA, JA = csr(matrix_size_row, matrix_size_col, density, file_id_1)
-    BR, IB, JB = csr(matrix_size_row, matrix_size_col, density, file_id_2)
-    CR, IC, JC = [], [0], []
+    ar, ia, ja = csr(matrix_size_row, matrix_size_col, density, file_id_1)
+    br, ib, jb = csr(matrix_size_row, matrix_size_col, density, file_id_2)
+    cr, ic, jc = [], [0], []
     start_time = time.time()
 
     a_previous_row_index = 0
     b_previous_row_index = 0
     c_nz_counter = 0
-    for row_index in range(1, len(IA)):     # len(IA) = len(IB)
-        a_row_number = IA[row_index] - IA[row_index-1]  # get A's row number
-        b_row_number = IB[row_index] - IB[row_index-1]  # get B's row number
+    for row_index in range(1, len(ia)):  # len(ia) = len(ib)
+        a_row_number = ia[row_index] - ia[row_index - 1]  # get A's row number
+        b_row_number = ib[row_index] - ib[row_index - 1]  # get B's row number
 
         new_a_row_index = a_previous_row_index + a_row_number
         new_b_row_index = b_previous_row_index + b_row_number
 
-        a_columns = JA[a_previous_row_index: new_a_row_index]
-        b_columns = JB[b_previous_row_index: new_b_row_index]
-        a_values = AR[a_previous_row_index: new_a_row_index]
-        b_values = BR[b_previous_row_index: new_b_row_index]
+        a_columns = ja[a_previous_row_index: new_a_row_index]
+        b_columns = jb[b_previous_row_index: new_b_row_index]
+        a_values = ar[a_previous_row_index: new_a_row_index]
+        b_values = br[b_previous_row_index: new_b_row_index]
 
         a_value_index = 0
         b_value_index = 0
@@ -203,13 +203,13 @@ def subtraction_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_
         all_columns = sorted(set(a_columns).union(b_columns))
         for index in all_columns:
             if index in distinct_a:
-                CR.append(a_values[a_value_index])
-                JC.append(index)
+                cr.append(a_values[a_value_index])
+                jc.append(index)
                 a_value_index += 1
                 c_nz_counter += 1
             elif index in distinct_b:
-                CR.append(-b_values[b_value_index])
-                JC.append(index)
+                cr.append(-b_values[b_value_index])
+                jc.append(index)
                 b_value_index += 1
                 c_nz_counter += 1
             elif index in common_col:
@@ -219,12 +219,12 @@ def subtraction_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_
                     b_value_index += 1
                     continue
                 else:
-                    CR.append(new_value)
-                    JC.append(index)
+                    cr.append(new_value)
+                    jc.append(index)
                     a_value_index += 1
                     b_value_index += 1
                     c_nz_counter += 1
-        IC.append(c_nz_counter)
+        ic.append(c_nz_counter)
         a_previous_row_index = new_a_row_index
         b_previous_row_index = new_b_row_index
     total_time = time.time() - start_time
@@ -232,7 +232,7 @@ def subtraction_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_
         os.makedirs('../execution_results')
     with open(os.path.join('../execution_results', 'add_sub_time.txt'), 'a') as f:
         f.write('subtraction_csr %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
-    # return CR, IC, JC
+    # return cr, ic, jc
     return [], [], []
 
 
