@@ -66,7 +66,7 @@ def outer_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matr
     ----------------------
     Convert A matrix in csc format and B matrix in csr format, ...
     ----------------------
-    :return: three list cr< ic, jc, is the result-matrix in csr format
+    :return: three list cr ic, jc, is the result-matrix in csr format
     """
     '''1xn 1xn both'''
     if matrix_size_row_1 == matrix_size_row_2 and matrix_size_col_1 == matrix_size_col_2:
@@ -146,7 +146,7 @@ def multiply_vector_matrix(matrix_size_row_1, matrix_size_col_1, density, file_i
     :param matrix_size_col_2: int
     :param file_id_2: int
     ----------------------
-    input must be: matrix nxm, vector 1nx
+    input must be: matrix nxm, vector 1xn
     ----------------------
     Convert the A matrix in csc format and the B matrix in csr format, usage of multiply_row_col function to multiply
     ----------------------
@@ -285,13 +285,15 @@ def multiply_matrix_matrix(matrix_size_row_1, matrix_size_col_1, density, file_i
                     counter_nz += 1
             ic.append(counter_nz)
 
-            total_time = time.time() - start_time
-            with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
-                f.write(
-                    'matrix-matrix\t%s\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, matrix_size_col_2,
-                                                               density, total_time))
+        total_time = time.time() - start_time
+        with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
+            f.write(
+                'matrix-matrix\t%s\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, matrix_size_col_2,
+                                                           density, total_time))
     else:
         raise UserWarning('Probably wrong input. Expected <matrix_size_col_1> and <matrix_size_row_2> to be equal')
+
+    return cr, ic, jc
 
 
 def multiply_row_col_for_matrix_matrix_multiplication(row_indexes, row_values, vector_nz):
@@ -299,8 +301,6 @@ def multiply_row_col_for_matrix_matrix_multiplication(row_indexes, row_values, v
     :param row_indexes: list
     :param row_values: list
     :param vector_nz: list
-    ----------------------
-
     ----------------------
     :return: the result of multiplication for a row and a col
     """
@@ -317,8 +317,6 @@ def fetch_inner_for_loop_values(ib, br, jb):
     :param ib: list
     :param br: list
     :param jb: list
-    ----------------------
-
     ----------------------
     :return: a list of non zero values per col
     """
@@ -337,4 +335,20 @@ def fetch_inner_for_loop_values(ib, br, jb):
 
 
 if __name__ == '__main__':
-    inner_product(2, 1, 1, 3, 1, 1, 2)
+    if sys.argv[1] == 'inner':
+        result_inner = inner_product(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]),
+                                     int(sys.argv[7]), int(sys.argv[8]))
+    elif sys.argv[1] == 'outer':
+        result_outer = outer_product(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]),
+                                     int(sys.argv[7]), int(sys.argv[8]))
+    elif sys.argv[1] == 'matrix_vector':
+        multiply_matrix_vector(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]),
+                               int(sys.argv[7]), int(sys.argv[8]))
+    elif sys.argv[1] == 'vector_matrix':
+        multiply_vector_matrix(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]),
+                               int(sys.argv[7]), int(sys.argv[8]))
+    elif sys.argv[1] == 'matrix_matrix':
+        multiply_matrix_matrix(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]),
+                               int(sys.argv[7]), int(sys.argv[8]))
+    else:
+        print('You choose wrong algorithm.')
