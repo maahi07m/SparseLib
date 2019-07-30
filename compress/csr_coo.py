@@ -76,6 +76,8 @@ def csr_parallel(file_name, write_time, matrix_size_row, matrix_size_col, densit
         ia.append(ne_counter)
     total_time = time.time() - start_time
     if write_time:
+        if not os.path.exists(file_path + 'execution_results'):
+            os.makedirs(file_path + 'execution_results')
         with open(os.path.join(file_path + 'execution_results', 'execution_time.txt'), 'a') as f:
             f.write('CSR\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
     return ar, ia, ja
@@ -111,6 +113,8 @@ def csr_sequential(file_name, write_time, matrix_size_row, matrix_size_col, dens
                 ia.append(ne_counter)
         total_time = time.time() - start_time
         if write_time:
+            if not os.path.exists(file_path + 'execution_results'):
+                os.makedirs(file_path + 'execution_results')
             with open(os.path.join(file_path + 'execution_results', 'execution_time.txt'), 'a') as f:
                 f.write('CSR\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
         return ar, ia, ja
@@ -143,6 +147,8 @@ def coo_parallel(file_name, write_time, matrix_size_row, matrix_size_col, densit
                 ja.append(col)
     total_time = time.time() - start_time
     if write_time:
+        if not os.path.exists(file_path + 'execution_results'):
+            os.makedirs(file_path + 'execution_results')
         with open(os.path.join(file_path+'execution_results', 'execution_time.txt'), 'a') as f:
             f.write('COO\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
     return ar, ia, ja
@@ -174,6 +180,8 @@ def coo_sequential(file_name, write_time, matrix_size_row, matrix_size_col, dens
                         ja.append(col)
         total_time = time.time() - start_time
         if write_time:
+            if not os.path.exists(file_path + 'execution_results'):
+                os.makedirs(file_path + 'execution_results')
             with open(os.path.join(file_path + 'execution_results', 'execution_time.txt'), 'a') as f:
                 f.write('COO\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
         return ar, ia, ja

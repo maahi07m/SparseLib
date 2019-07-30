@@ -48,19 +48,22 @@ def read_matrix_parallel(file_name, matrix_length_row='-', matrix_length_col='-'
     pool.close()
     if write_time:
         total_time = time.time() - start_time
-        print('parallel: ', total_time)
+        if not os.path.exists(file_path + 'execution_results'):
+            os.makedirs(file_path + 'execution_results')
         with open(os.path.join(file_path + 'execution_results', 'read_time.txt'), 'a') as f:
             f.write('parallel\t%s\t%s\t%s\t%.5f\n' % (matrix_length_row, matrix_length_col, density, total_time))
     return result
 
 
-def read_matrix_sequentially(file_name, write_time=False, matrix_length_row='-', matrix_length_col='-', density='-'):
+def read_matrix_sequentially(file_name, write_time=False, matrix_length_row='-', matrix_length_col='-', density='-',
+                             file_path='../'):
     """
     :param file_name: string
     :param write_time: boolean
     :param matrix_length_row: int
     :param matrix_length_col: int
-    :param density: float
+    :param density: float]
+    :param file_path: string
     ----------------------
     :return: the matrix of the file read, stored as a list
     """
@@ -73,8 +76,9 @@ def read_matrix_sequentially(file_name, write_time=False, matrix_length_row='-',
 
     if write_time:
         total_time = time.time() - start_time
-        print('sequential: ', total_time)
-        with open(os.path.join('..execution_results', 'read_time.txt'), 'a') as f:
+        if not os.path.exists(file_path + 'execution_results'):
+            os.makedirs(file_path + 'execution_results')
+        with open(os.path.join(file_path + 'execution_results', 'read_time.txt'), 'a') as f:
             f.write('sequential\t%s\t%s\t%s\t%.5f\n' % (matrix_length_row, matrix_length_col, density, total_time))
     return matrix_result
 

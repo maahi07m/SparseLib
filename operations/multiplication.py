@@ -42,6 +42,8 @@ def inner_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matr
                 continue
             output += ar[ia_value - 1] * br[ib_value - 1]
         total_time = time.time() - start_time
+        if not os.path.exists('../execution_results'):
+            os.makedirs('../execution_results')
         with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
             f.write('inner product\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
 
@@ -81,6 +83,8 @@ def outer_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matr
         ic = [ja_value * len(br) for ja_value in ja]
         jc = jb * len(ar)
         total_time = time.time() - start_time
+        if not os.path.exists('../execution_results'):
+            os.makedirs('../execution_results')
         with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
             f.write('outer product\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
 
@@ -126,6 +130,8 @@ def multiply_matrix_vector(matrix_size_row_1, matrix_size_col_1, density, file_i
         jc.append(len(cr))
 
         total_time = time.time() - start_time
+        if not os.path.exists('../execution_results'):
+            os.makedirs('../execution_results')
         with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
             f.write('matrix-vector\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
 
@@ -172,6 +178,8 @@ def multiply_vector_matrix(matrix_size_row_1, matrix_size_col_1, density, file_i
 
     ic.append(len(cr))
     total_time = time.time() - start_time
+    if not os.path.exists('../execution_results'):
+        os.makedirs('../execution_results')
     with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
         f.write('vector-matrix\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
 
@@ -286,6 +294,8 @@ def multiply_matrix_matrix(matrix_size_row_1, matrix_size_col_1, density, file_i
             ic.append(counter_nz)
 
         total_time = time.time() - start_time
+        if not os.path.exists('../execution_results'):
+            os.makedirs('../execution_results')
         with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
             f.write(
                 'matrix-matrix\t%s\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, matrix_size_col_2,
@@ -336,19 +346,24 @@ def fetch_inner_for_loop_values(ib, br, jb):
 
 if __name__ == '__main__':
     if sys.argv[1] == 'inner':
-        result_inner = inner_product(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]),
+        result_inner = inner_product(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]),
+                                     int(sys.argv[6]),
                                      int(sys.argv[7]), int(sys.argv[8]))
     elif sys.argv[1] == 'outer':
-        result_outer = outer_product(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]),
+        result_outer = outer_product(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]),
+                                     int(sys.argv[6]),
                                      int(sys.argv[7]), int(sys.argv[8]))
     elif sys.argv[1] == 'matrix_vector':
-        multiply_matrix_vector(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]),
+        multiply_matrix_vector(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]),
+                               int(sys.argv[6]),
                                int(sys.argv[7]), int(sys.argv[8]))
     elif sys.argv[1] == 'vector_matrix':
-        multiply_vector_matrix(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]),
+        multiply_vector_matrix(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]),
+                               int(sys.argv[6]),
                                int(sys.argv[7]), int(sys.argv[8]))
     elif sys.argv[1] == 'matrix_matrix':
-        multiply_matrix_matrix(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]),
+        multiply_matrix_matrix(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]),
+                               int(sys.argv[6]),
                                int(sys.argv[7]), int(sys.argv[8]))
     else:
         print('You choose wrong algorithm.')

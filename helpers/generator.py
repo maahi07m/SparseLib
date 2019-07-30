@@ -49,6 +49,8 @@ def write_matrix_to_file(first_dimension, second_dimension, density, file_id, ma
     start_time = time.time()
     data_to_write = ''.join(pool.map(__prepare_matrix, matrix))
     pool.close()
+    if not os.path.exists(file_path + 'data_files'):
+        os.makedirs(file_path + 'data_files')
     with open(os.path.join(file_path+'data_files', file_name), 'w') as f:
         f.write(data_to_write)
     print(time.time() - start_time)

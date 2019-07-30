@@ -28,12 +28,12 @@ def diagonal(matrix_size_row, matrix_size_col, density, file_id, parallel=True, 
     diagonal about the range from the main diagonal
     """
     global A
-    file_name = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' +  str(density) + '_' + \
+    file_name = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' + str(density) + '_' + \
                 str(file_id) + '.txt'
     if parallel:
         A = np.array(read_matrix_parallel(file_name, matrix_size_row, matrix_size_col, density, True, 4, file_path))
     else:
-        A = np.array(read_matrix_sequentially(file_name, matrix_size_row, matrix_size_col, density))
+        A = np.array(read_matrix_sequentially(file_name, matrix_size_row, matrix_size_col, density, file_path))
 
     la, ad = [], [[]]
     a_length = len(A)
@@ -68,6 +68,8 @@ def diagonal(matrix_size_row, matrix_size_col, density, file_id, parallel=True, 
 
     if write_time:
         total_time = time.time() - start_time
+        if not os.path.exists(file_path + 'execution_results'):
+            os.makedirs(file_path + 'execution_results')
         with open(os.path.join(file_path+'execution_results', 'execution_time.txt'), 'a') as f:
             f.write('Diagonal\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
         # print("total time : ", total_time)
@@ -213,7 +215,8 @@ def csc(matrix_size_row, matrix_size_col, density, file_id, parallel=True, write
         file_matrix = np.array(read_matrix_parallel(file_name, matrix_size_row, matrix_size_col, density, True, 4,
                                                     file_path))
     else:
-        file_matrix = np.array(read_matrix_sequentially(file_name, matrix_size_row, matrix_size_col, density))
+        file_matrix = np.array(read_matrix_sequentially(file_name, matrix_size_row, matrix_size_col, density,
+                                                        file_path))
     start_time = time.time()
     ar, ia, ja = [], [], [0]
     ne_counter = 0
@@ -231,6 +234,8 @@ def csc(matrix_size_row, matrix_size_col, density, file_id, parallel=True, write
     total_time = time.time() - start_time
 
     if write_time:
+        if not os.path.exists(file_path + 'execution_results'):
+            os.makedirs(file_path + 'execution_results')
         with open(os.path.join(file_path+'execution_results', 'execution_time.txt'), 'a') as f:
             f.write('CSC\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
 

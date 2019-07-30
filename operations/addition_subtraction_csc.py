@@ -1,11 +1,13 @@
 """This script calculate the addition and subtraction of two matrices and stored the results in csc format.
 To run: python3 addition_subtraction_css.py <algorithm name> <size of rows> <size of cols> <density> <file_id_1> <file_id_2>
 """
+import os
+import sys
 import time
+
 from numpy import array
 from scipy.sparse import csc_matrix
-import sys
-import os
+
 sys.path.append('../')
 from compress.diagonal_csc import csc
 from read_file.matrix_read import read_matrix_parallel
@@ -33,7 +35,8 @@ def addition_matrices_numpy(matrix_size_row, matrix_size_col, density, file_id_1
     start_time = time.time()
     total = A + B
     total_time = time.time() - start_time
-
+    if not os.path.exists('../execution_results'):
+        os.makedirs('../execution_results')
     with open(os.path.join('../execution_results', 'add_sub_numpy_time.txt'), 'a') as f:
         f.write('addition_numpy_csc %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
     # x = total.toarray()
@@ -73,6 +76,8 @@ def subtraction_matrices_numpy(matrix_size_row, matrix_size_col, density, file_i
     total = A - B
     total_time  = time.time() - start_time
 
+    if not os.path.exists('../execution_results'):
+        os.makedirs('../execution_results')
     with open(os.path.join('../execution_results', 'add_sub_numpy_time.txt'), 'a') as f:
         f.write('subtraction_numpy_csc %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
     # x = total.toarray()
@@ -152,6 +157,8 @@ def addition_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, 
         a_previous_col_index = new_a_col_index
         b_previous_col_index = new_b_col_index
     total_time = time.time() - start_time
+    if not os.path.exists('../execution_results'):
+        os.makedirs('../execution_results')
     with open(os.path.join('../execution_results', 'add_sub_time.txt'), 'a') as f:
         f.write('addition_csc %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
     return CR, IC, JC
@@ -221,6 +228,8 @@ def subtraction_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_
         a_previous_col_index = new_a_col_index
         b_previous_col_index = new_b_col_index
     total_time = time.time() - start_time
+    if not os.path.exists('../execution_results'):
+        os.makedirs('../execution_results')
     with open(os.path.join('../execution_results', 'add_sub_time.txt'), 'a') as f:
         f.write('subtraction_csc %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
     return CR, IC, JC

@@ -198,6 +198,8 @@ def __write_matrix_to_file(m, n, matrix, file_path):
             else:
                 data_to_write += ("%s\t" % str(inner))
         data_to_write += "\n"
+    if not os.path.exists(file_path + 'data_files'):
+        os.makedirs(file_path + 'data_files')
     with open(os.path.join(file_path + 'data_files', file_name), 'w') as f:
         f.write(data_to_write)
 
