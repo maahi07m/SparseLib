@@ -185,6 +185,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 6:
         if sys.argv[1].lower() == 'csr':
             AR1, IA1, JA1 = csr(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], True, True)
+            print(AR1, IA1, JA1)
         elif sys.argv[1].lower() == 'coo':
             AR2, IA2, JA2 = coo(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], True, True)
     elif len(sys.argv) == 5:

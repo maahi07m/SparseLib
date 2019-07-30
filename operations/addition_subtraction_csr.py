@@ -1,3 +1,6 @@
+"""This script calculate the addition and subtraction of two matrices and stored the results in csr format.
+To run: python3 addition_subtraction_csr.py <algorithm name> <size of rows> <size of cols> <density> <file_id_1> <file_id_2>
+"""
 import time
 from numpy import array
 from scipy.sparse import csr_matrix
@@ -7,26 +10,32 @@ sys.path.append('../')
 from compress.csr_coo import csr
 from read_file.matrix_read import read_matrix_parallel
 
-file_1 = "output_10_0.5_1.txt"
-file_2 = "output_10_0.5_3.txt"
-# matrix_size_row = 10
-# matrix_size_col = 10
-# density = 0.5
-# file_id_1 = 1
-# file_id_2 = 3
 
-
-def addition_matrices_numpy():
+def addition_matrices_numpy(matrix_size_row, matrix_size_col, density, file_id_1, file_id_2):
+    """
+    :param matrix_size_row: int
+    :param matrix_size_col: int
+    :param density: float
+    :param file_id_1: int
+    :param file_id_2: int
+    ----------------------
+    :return: result of the addition stored in numpy array format
+    """
+    file_1 = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' + str(density) + '_' + \
+                str(file_id_1) + '.txt'
+    file_2 = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' + str(density) + '_' + \
+             str(file_id_2) + '.txt'
     A = read_matrix_parallel(file_1)
     B = read_matrix_parallel(file_2)
     A = csr_matrix(array(A))
     B = csr_matrix(array(B))
 
-    start = time.time()
+    start_time = time.time()
     total = A + B
-    stop = time.time()
+    total_time = time.time() - start_time
 
-    print("numpy time : ", stop-start)
+    with open(os.path.join('../execution_results', 'add_sub_numpy_time.txt'), 'a') as f:
+        f.write('addition_numpy_csr %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
     x = total.toarray()
     # with open("../data_files/output_10_0.5_3.txt", 'w') as f:
     #     for item in x:
@@ -42,17 +51,18 @@ def addition_matrices_numpy():
 
 
 def addition_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, file_id_2):
+    """
+    :param matrix_size_row: int
+    :param matrix_size_col: int
+    :param density: float
+    :param file_id_1: int
+    :param file_id_2: int
+    ----------------------
+    :return: the result of the addition of two matrices stored in csr format
+    """
     AR, IA, JA = csr(matrix_size_row, matrix_size_col, density, file_id_1)
-    # print(AR)
-    # print(IA)
-    # print(JA)
-    print("-" * 100)
     BR, IB, JB = csr(matrix_size_row, matrix_size_col, density, file_id_2)
-    # print(BR)
-    # print(IB)
-    # print(JB)
     CR, IC, JC = [], [0], []
-    print("-" * 100)
     start_time = time.time()
 
     a_previous_row_index = 0
@@ -109,17 +119,31 @@ def addition_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, 
     return [], [], []
 
 
-def subtration_matrices_numpy():
+def subtraction_matrices_numpy(matrix_size_row, matrix_size_col, density, file_id_1, file_id_2):
+    """
+    :param matrix_size_row: int
+    :param matrix_size_col: int
+    :param density: float
+    :param file_id_1: int
+    :param file_id_2: int
+    ----------------------
+    :return: the result of the subtraction stored in numpy array
+    """
+    file_1 = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' + str(density) + '_' + \
+                str(file_id_1) + '.txt'
+    file_2 = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' + str(density) + '_' + \
+                str(file_id_2) + '.txt'
     A = read_matrix_parallel(file_1)
     B = read_matrix_parallel(file_2)
     A = csr_matrix(array(A))
     B = csr_matrix(array(B))
 
-    start = time.time()
+    start_time = time.time()
     total = A - B
-    stop = time.time()
+    total_time = time.time() - start_time
 
-    print("numpy time : ", stop-start)
+    with open(os.path.join('../execution_results', 'add_sub_numpy_time.txt'), 'a') as f:
+        f.write('subtraction_numpy_csr %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
     # x = total.toarray()
     # with open("../data_files/temp.txt", 'w') as f:
     #     for item in x:
@@ -133,18 +157,19 @@ def subtration_matrices_numpy():
     return total.toarray()
 
 
-def subtration_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, file_id_2):
+def subtraction_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, file_id_2):
+    """
+    :param matrix_size_row: int
+    :param matrix_size_col: int
+    :param density: float
+    :param file_id_1: int
+    :param file_id_2: int
+    ----------------------
+    :return: the result of the subtraction of two matrices stored in csr format
+    """
     AR, IA, JA = csr(matrix_size_row, matrix_size_col, density, file_id_1)
-    # print(AR)
-    # print(IA)
-    # print(JA)
-    print("-" * 100)
     BR, IB, JB = csr(matrix_size_row, matrix_size_col, density, file_id_2)
-    # print(BR)
-    # print(IB)
-    # print(JB)
     CR, IC, JC = [], [0], []
-    print("-" * 100)
     start_time = time.time()
 
     a_previous_row_index = 0
@@ -196,7 +221,7 @@ def subtration_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1
         b_previous_row_index = new_b_row_index
     total_time = time.time() - start_time
     with open(os.path.join('../execution_results', 'add_sub_time.txt'), 'a') as f:
-        f.write('subtration_csr %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
+        f.write('subtraction_csr %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
     # return CR, IC, JC
     return [], [], []
 
@@ -205,11 +230,11 @@ if __name__ == '__main__':
     if len(sys.argv) == 7:
         if sys.argv[1].lower() == 'addition':
             AR1, IA1, JA1 = addition_matrices_nxn(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
-        elif sys.argv[1].lower() == 'subtration':
-            AR2, IA2, JA2 = subtration_matrices_nxn(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
+        elif sys.argv[1].lower() == 'subtraction':
+            AR2, IA2, JA2 = subtraction_matrices_nxn(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
     elif len(sys.argv) == 6:
         AR1, IA1, JA1 = addition_matrices_nxn(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
-        AR2, IA2, JA2 = subtration_matrices_nxn(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
+        AR2, IA2, JA2 = subtraction_matrices_nxn(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
     else:
         print("There is no main to run")
     # npR, Inp, Jnp = addition_matrices_numpy()

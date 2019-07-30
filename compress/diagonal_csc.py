@@ -28,7 +28,7 @@ def diagonal(matrix_size_row, matrix_size_col, density, file_id, parallel=True, 
     diagonal about the range from the main diagonal
     """
     global A
-    file_name = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + str(density) + '_' + \
+    file_name = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' +  str(density) + '_' + \
                 str(file_id) + '.txt'
     if parallel:
         A = np.array(read_matrix_parallel(file_name, matrix_size_row, matrix_size_col, density, True, 4, file_path))
@@ -70,7 +70,7 @@ def diagonal(matrix_size_row, matrix_size_col, density, file_id, parallel=True, 
         total_time = time.time() - start_time
         with open(os.path.join(file_path+'execution_results', 'execution_time.txt'), 'a') as f:
             f.write('Diagonal\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
-        print("total time : ", total_time)
+        # print("total time : ", total_time)
 
     return ad, la
 

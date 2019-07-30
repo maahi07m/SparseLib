@@ -5,6 +5,12 @@ import time
 
 
 def __read_file(file_name, file_path):
+    """
+    :param file_name: string
+    :param file_path: string
+    ----------------------
+    :return: whole file read
+    """
     try:
         with open(os.path.join(file_path + 'data_files', file_name), 'r') as f:
             return f.read()
@@ -13,11 +19,27 @@ def __read_file(file_name, file_path):
 
 
 def __process_func(line):
+    """
+    :param line: line of the txt file string
+     ----------------------
+    :return: the line splitted by tabs
+    """
     return tuple([tuple(map(int, line.split('\t')))])[0]
 
 
 def read_matrix_parallel(file_name, matrix_length_row='-', matrix_length_col='-', density='-', write_time=False,
                          number_process=mp.cpu_count(), file_path='../'):
+    """
+    :param file_name: string
+    :param matrix_length_row: int
+    :param matrix_length_col: int
+    :param density: float
+    :param write_time: boolean
+    :param number_process: int
+    :param file_path: string
+    ----------------------
+    :return: the matrix of the file read, stored as a list
+    """
     start_time = time.time()
     file_matrix = __read_file(file_name, file_path).split('\n')
     file_matrix.pop()
@@ -33,6 +55,15 @@ def read_matrix_parallel(file_name, matrix_length_row='-', matrix_length_col='-'
 
 
 def read_matrix_sequentially(file_name, write_time=False, matrix_length_row='-', matrix_length_col='-', density='-'):
+    """
+    :param file_name: string
+    :param write_time: boolean
+    :param matrix_length_row: int
+    :param matrix_length_col: int
+    :param density: float
+    ----------------------
+    :return: the matrix of the file read, stored as a list
+    """
     start_time = time.time()
     try:
         with open(os.path.join('..data_files', file_name), 'r') as f:
@@ -49,6 +80,11 @@ def read_matrix_sequentially(file_name, write_time=False, matrix_length_row='-',
 
 
 def read_matrix_generator(file):
+    """
+    :param file: txt file
+    ----------------------
+    :return: convert strings of each line into a integer
+    """
     while True:
         data = file.readline()
         if not data:
