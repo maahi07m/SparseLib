@@ -1,6 +1,7 @@
 """This script calculate the addition and subtraction of two matrices and stored the results in csc format.
 To run: python3 addition_subtraction_css.py <algorithm name> <size of rows> <size of cols> <density> <file_id_1> <file_id_2>
 """
+import multiprocessing as mp
 import os
 import sys
 import time
@@ -11,6 +12,37 @@ from scipy.sparse import csc_matrix
 sys.path.append('../')
 from compress.diagonal_csc import csc
 from read_file.matrix_read import read_matrix_parallel
+
+
+def __prepare_matrix(line):
+    data_to_write = ''
+    for index, inner in enumerate(line):
+        if index == line.shape[0] - 1:
+            data_to_write += str(int(inner))
+        else:
+            data_to_write += ("%s\t" % str(int(inner)))
+    data_to_write += "\n"
+    return data_to_write
+
+
+def write_np_table(matrix, file_name):
+    number_process = mp.cpu_count()
+    pool = mp.Pool(number_process)
+    data_to_write = ''.join(pool.map(__prepare_matrix, matrix))
+    pool.close()
+    with open(os.path.join('../data_files', file_name), 'w') as f:
+        f.write(data_to_write)
+
+
+def validate_operation(cr, ic, jc, npr, inp, jnp, matrix_size_row, matrix_size_col, density, file_id_1, file_id_2,
+                       operation_type):
+    if cr == npr and ic == inp and jc == jnp:
+        pass
+    else:
+        print("espase", matrix_size_row, matrix_size_col, file_id_1, file_id_2, density)
+        with open(os.path.join('../operation_error', 'add_sub_operation_error_csc.txt'), 'a') as f:
+            f.write(operation_type + '_csc\t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_row, matrix_size_col, file_id_1,
+                                                                       file_id_2, density))
 
 
 def addition_matrices_numpy(matrix_size_row, matrix_size_col, density, file_id_1, file_id_2):
@@ -39,18 +71,11 @@ def addition_matrices_numpy(matrix_size_row, matrix_size_col, density, file_id_1
         os.makedirs('../execution_results')
     with open(os.path.join('../execution_results', 'add_sub_numpy_time.txt'), 'a') as f:
         f.write('addition_numpy_csc %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
-    # x = total.toarray()
-    # with open("../data_files/temp.txt", 'w') as f:
-    #     for item in x:
-    #         for index,inner in enumerate(item):
-    #             if index == item.shape[0] - 1:
-    #                 f.write("%s" % str(int(inner)), )
-    #             else:
-    #                 f.write("%s\t" % str(int(inner)), )
-    #         f.write("\n")
-
-    # return csc(matrix_size, density, file_id_1+2)
-    return total.toarray()
+    result_to_array = total.toarray()
+    numpy_result_file_name = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' + str(density) + '_' \
+                             + '20.txt'
+    write_np_table(result_to_array, numpy_result_file_name)
+    return csc(matrix_size_row, matrix_size_col, density, 20)
 
 
 def subtraction_matrices_numpy(matrix_size_row, matrix_size_col, density, file_id_1, file_id_2):
@@ -74,24 +99,18 @@ def subtraction_matrices_numpy(matrix_size_row, matrix_size_col, density, file_i
 
     start_time = time.time()
     total = a_matrix - b_matrix
-    total_time  = time.time() - start_time
+    total_time = time.time() - start_time
 
     if not os.path.exists('../execution_results'):
         os.makedirs('../execution_results')
     with open(os.path.join('../execution_results', 'add_sub_numpy_time.txt'), 'a') as f:
         f.write('subtraction_numpy_csc %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
-    # x = total.toarray()
-    # with open("../data_files/temp.txt", 'w') as f:
-    #     for item in x:
-    #         for index,inner in enumerate(item):
-    #             if indext == item.shape[0] - 1:
-    #                 f.write("%s" % str(int(inner)), )
-    #             else:
-    #                 f.write("%s\t" % str(int(inner)), )
-    #         f.write("\n")
-    #
-    # return csc(matrix_size, density, file_id_1+2)
-    return total.toarray()
+
+    result_to_array = total.toarray()
+    numpy_result_file_name = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' + str(density) + '_' \
+                             + '21.txt'
+    write_np_table(result_to_array, numpy_result_file_name)
+    return csc(matrix_size_row, matrix_size_col, density, 21)
 
 
 def addition_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, file_id_2):
@@ -162,7 +181,6 @@ def addition_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, 
     with open(os.path.join('../execution_results', 'add_sub_time.txt'), 'a') as f:
         f.write('addition_csc %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
     return cr, ic, jc
-    # return [], [], []
 
 
 def subtraction_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, file_id_2):
@@ -233,33 +251,32 @@ def subtraction_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_
     with open(os.path.join('../execution_results', 'add_sub_time.txt'), 'a') as f:
         f.write('subtraction_csc %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
     return cr, ic, jc
-    # return [], [], []
 
 
 if __name__ == '__main__':
     if len(sys.argv) == 7:
         if sys.argv[1].lower() == 'addition':
+            npr, inp, jnp = addition_matrices_numpy(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
             AR1, IA1, JA1 = addition_matrices_nxn(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
+
+            validate_operation(AR1, IA1, JA1, npr, inp, jnp, sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5],
+                               sys.argv[6], 'addition')
+            
         elif sys.argv[1].lower() == 'subtraction':
+            npr, inp, jnp = subtraction_matrices_numpy(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
             AR2, IA2, JA2 = subtraction_matrices_nxn(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
+
+            validate_operation(AR2, IA2, JA2, npr, inp, jnp, sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5],
+                               sys.argv[6], 'subtraction')
     elif len(sys.argv) == 6:
+        npr, inp, jnp = addition_matrices_numpy(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
         AR1, IA1, JA1 = addition_matrices_nxn(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
+        validate_operation(AR1, IA1, JA1, npr, inp, jnp, sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],
+                           sys.argv[5], 'addition')
+
+        npr2, inp2, jnp2 = subtraction_matrices_numpy(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
         AR2, IA2, JA2 = subtraction_matrices_nxn(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
+        validate_operation(AR2, IA2, JA2, npr2, inp2, jnp2, sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],
+                           sys.argv[5], 'subtraction')
     else:
         print("There is no main to run")
-    # npR, Inp, Jnp = addition_matrices_numpy()
-    # numpy_result = subtraction_matrices_numpy(4,4,0.5,1,2)
-    #
-    # C, IC, JC = subtraction_matrices_nxn(4,4,0.5,1,2)
-    # for x in range(len(C)):
-    #     if C[x] != npR[x]:
-    #         print(x, C[x], npR[x])
-    # print('----')
-    # for i in range(len(IC)):
-    #     if IC[i] != Inp[i]:
-    #         print(i, IC[i], Inp[i])
-    # print('----')
-    #
-    # for  z in range(len(JC)):
-    #     if JC[z] != Jnp[z]:
-    #         print(z, JC[z], Jnp[z])
