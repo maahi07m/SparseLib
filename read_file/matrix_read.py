@@ -38,7 +38,7 @@ def read_matrix_parallel(file_name, matrix_length_row='-', matrix_length_col='-'
     :param number_process: int
     :param file_path: string
     ----------------------
-    :return: the matrix of the file read, stored as a list
+    :return: file's matrix as list of lists
     """
     start_time = time.time()
     file_matrix = __read_file(file_name, file_path).split('\n')
@@ -65,7 +65,7 @@ def read_matrix_sequentially(file_name, write_time=False, matrix_length_row='-',
     :param density: float]
     :param file_path: string
     ----------------------
-    :return: the matrix of the file read, stored as a list
+    :return: file's matrix as list of lists
     """
     start_time = time.time()
     try:
@@ -85,9 +85,9 @@ def read_matrix_sequentially(file_name, write_time=False, matrix_length_row='-',
 
 def read_matrix_generator(file):
     """
-    :param file: txt file
+    :param file: a file pointer
     ----------------------
-    :return: convert strings of each line into a integer
+    :return: file's line as tuple with integers
     """
     while True:
         data = file.readline()
