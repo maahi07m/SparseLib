@@ -6,6 +6,7 @@ import time
 sys.path.append('../')
 from compress.csr_coo import csr
 from compress.diagonal_csc import csc
+from read_file.matrix_read import read_matrix_parallel
 
 
 def inner_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2, matrix_size_col_2,
@@ -42,11 +43,24 @@ def inner_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matr
                 continue
             output += ar[ia_value - 1] * br[ib_value - 1]
         total_time = time.time() - start_time
+
         if not os.path.exists('../execution_results'):
             os.makedirs('../execution_results')
         with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
             f.write('inner product\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
 
+        if not os.path.exists('../numpy_results'):
+            os.makedirs('../numpy_results')
+        with open(os.path.join('../numpy_results', 'inner_numpy.txt'), 'r') as f:
+            result_numpy = f.read()
+
+        if int(result_numpy) != output:
+            print('espase inner')
+            if not os.path.exists('../operation_error'):
+                os.makedirs('../operation_error')
+            with open(os.path.join('../operation_error', 'inner_errors.txt'), 'a') as f:
+                f.write(' inner \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, file_id_1,
+                                                                           file_id_2, density))
         return output
     else:
         raise UserWarning('Probably wrong input. Expected <matrix_size_row_1> and <matrix_size_row_2> to be equal and '
@@ -88,6 +102,13 @@ def outer_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matr
         with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
             f.write('outer product\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
 
+        ncr, nic, njc = csr(matrix_size_col_1, matrix_size_col_2, density, 31)
+
+        if ncr != cr and nic != ic and njc != jc:
+            print("espase", matrix_size_row_1, matrix_size_col_1, density)
+            with open(os.path.join('../operation_error', 'multiplication_error.txt'), 'a') as f:
+                f.write('outer product \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, file_id_1,
+                                                                           file_id_2, density))
         return cr, ic, jc
     else:
         raise UserWarning('Probably wrong input. Expected <matrix_size_row_1> and <matrix_size_row_2> to be equal and '
@@ -134,6 +155,14 @@ def multiply_matrix_vector(matrix_size_row_1, matrix_size_col_1, density, file_i
             os.makedirs('../execution_results')
         with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
             f.write('matrix-vector\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
+
+        ncr, nic, njc = csc(matrix_size_row_2, matrix_size_col_2, density, 32)
+
+        if ncr != cr and nic != ic and njc != jc:
+            print("espase", matrix_size_row_1, matrix_size_col_1, density)
+            with open(os.path.join('../operation_error', 'multiplication_error.txt'), 'a') as f:
+                f.write('matrix vector \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_row_2, matrix_size_col_2, file_id_1,
+                                                                    file_id_2, density))
 
         return cr, ic, jc
     else:
@@ -183,12 +212,17 @@ def multiply_vector_matrix(matrix_size_row_1, matrix_size_col_1, density, file_i
     with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
         f.write('vector-matrix\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
 
+    ncr, nic, njc = csc(matrix_size_row_1, matrix_size_col_1, density, 33)
+
+    if ncr != cr and nic != ic and njc != jc:
+        print("espase", matrix_size_row_1, matrix_size_col_1, density)
+        with open(os.path.join('../operation_error', 'multiplication_error.txt'), 'a') as f:
+            f.write('vector matrix \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, file_id_1,
+                                                                file_id_2, density))
+
     return cr, ic, jc
 
 
-# TODO: tests , change dictionary to be passed from function caller, comments
-# TODO: sparse matrix comments and write
-# TODO: check again matrix vector multiplication
 def multiply_row_col(row_indexes, row_values, vector_nz_indexes, vector_nz_values):
     """
     :param row_indexes: list
@@ -300,6 +334,15 @@ def multiply_matrix_matrix(matrix_size_row_1, matrix_size_col_1, density, file_i
             f.write(
                 'matrix-matrix\t%s\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, matrix_size_col_2,
                                                            density, total_time))
+
+        ncr, nic, njc = csr(matrix_size_col_1, matrix_size_row_2, density, 34)
+
+        if ncr != cr and nic != ic and njc != jc:
+            print("espase", matrix_size_col_1, matrix_size_row_2, density)
+            with open(os.path.join('../operation_error', 'multiplication_error.txt'), 'a') as f:
+                f.write('matrix matrix \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_col_1, matrix_size_row_2, file_id_1,
+                                                                    file_id_2, density))
+
     else:
         raise UserWarning('Probably wrong input. Expected <matrix_size_col_1> and <matrix_size_row_2> to be equal')
 
