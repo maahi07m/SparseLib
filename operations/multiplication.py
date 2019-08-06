@@ -6,8 +6,6 @@ import time
 sys.path.append('../')
 from compress.csr_coo import csr
 from compress.diagonal_csc import csc
-from read_file.matrix_read import read_matrix_parallel
-
 
 def inner_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2, matrix_size_col_2,
                   file_id_2):
@@ -60,7 +58,7 @@ def inner_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matr
                 os.makedirs('../operation_error')
             with open(os.path.join('../operation_error', 'inner_errors.txt'), 'a') as f:
                 f.write(' inner \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, file_id_1,
-                                                                           file_id_2, density))
+                                                             file_id_2, density))
         return output
     else:
         raise UserWarning('Probably wrong input. Expected <matrix_size_row_1> and <matrix_size_row_2> to be equal and '
@@ -105,18 +103,18 @@ def outer_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matr
         ncr, nic, njc = csr(matrix_size_col_1, matrix_size_col_2, density, 31)
 
         if ncr != cr and nic != ic and njc != jc:
-            print("espase", matrix_size_row_1, matrix_size_col_1, density)
+            print("espase outer", matrix_size_row_1, matrix_size_col_1, density)
             with open(os.path.join('../operation_error', 'multiplication_error.txt'), 'a') as f:
                 f.write('outer product \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, file_id_1,
-                                                                           file_id_2, density))
+                                                                    file_id_2, density))
         return cr, ic, jc
     else:
         raise UserWarning('Probably wrong input. Expected <matrix_size_row_1> and <matrix_size_row_2> to be equal and '
                           '<matrix_size_col_1> and <matrix_size_col_2> to be equal too')
 
 
-def multiply_matrix_vector(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2,
-                           matrix_size_col_2, file_id_2):
+def multiply_matrix_vector(matrix_size_row_1, matrix_size_col_1, matrix_size_row_2, matrix_size_col_2, density,
+                           file_id_1, file_id_2):
     """
     :param matrix_size_row_1: int
     :param matrix_size_col_1: int
@@ -138,12 +136,12 @@ def multiply_matrix_vector(matrix_size_row_1, matrix_size_col_1, density, file_i
         cr, ic, jc = [], [], [0]
         start_time = time.time()
         previous_ja_index = 0
-
+        vector_nz_values_dict = fetch_vector_values(ix, xr)
         for index in range(1, len(ia)):
             nz_number = ia[index] - ia[index - 1]
             new_ja_index = previous_ja_index + nz_number
             result_of_rows_cols = multiply_row_col(ja[previous_ja_index:new_ja_index],
-                                                   ar[previous_ja_index:new_ja_index], ix, xr)
+                                                   ar[previous_ja_index:new_ja_index], vector_nz_values_dict)
             previous_ja_index = new_ja_index
             if result_of_rows_cols:
                 cr.append(result_of_rows_cols)
@@ -154,15 +152,16 @@ def multiply_matrix_vector(matrix_size_row_1, matrix_size_col_1, density, file_i
         if not os.path.exists('../execution_results'):
             os.makedirs('../execution_results')
         with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
-            f.write('matrix-vector\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
+            f.write(
+                'matrix-vector_v2\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
 
         ncr, nic, njc = csc(matrix_size_row_2, matrix_size_col_2, density, 32)
 
         if ncr != cr and nic != ic and njc != jc:
-            print("espase", matrix_size_row_1, matrix_size_col_1, density)
+            print("espase matrix vector", matrix_size_row_1, matrix_size_col_1, density)
             with open(os.path.join('../operation_error', 'multiplication_error.txt'), 'a') as f:
-                f.write('matrix vector \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_row_2, matrix_size_col_2, file_id_1,
-                                                                    file_id_2, density))
+                f.write('matrix vector_v2 \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_row_2, matrix_size_col_2, file_id_1,
+                                                                       file_id_2, density))
 
         return cr, ic, jc
     else:
@@ -170,8 +169,33 @@ def multiply_matrix_vector(matrix_size_row_1, matrix_size_col_1, density, file_i
                           '<matrix_size_col_2> to be equal with 1')
 
 
-def multiply_vector_matrix(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2,
-                           matrix_size_col_2, file_id_2):
+def multiply_row_col(row_indexes, row_values, vector_nz_values):
+    """
+    :param row_indexes: list
+    :param row_values: list
+    :param vector_nz_values: list
+    ----------------------
+    A loop in the max length of indexes lists multiply only when the elements in indexes lists is the same
+    based in inner algorithm we found
+    ----------------------
+    :return: the result of a row/col multiply by a sparse vectors elements
+    """
+    result = 0
+    for index, value in enumerate(row_indexes):
+        if value in vector_nz_values:
+            result += vector_nz_values[value] * row_values[index]
+    return result
+
+
+def fetch_vector_values(vector_nz_indexes, vector_nz_values):
+    vector_nz_values_dict = {}
+    for index, value in enumerate(vector_nz_indexes):
+        vector_nz_values_dict[value] = vector_nz_values[index]
+    return vector_nz_values_dict
+
+
+def multiply_vector_matrix(matrix_size_row_1, matrix_size_col_1, matrix_size_row_2, matrix_size_col_2, density,
+                           file_id_1, file_id_2):
     """
     :param matrix_size_row_1: int
     :param matrix_size_col_1: int
@@ -192,14 +216,14 @@ def multiply_vector_matrix(matrix_size_row_1, matrix_size_col_1, density, file_i
     cr, ic, jc = [], [0], []
     previous_ia_index = 0
     start_time = time.time()
-
+    vector_nz_values_dict = fetch_vector_values(jx, xr)
     for index in range(1, len(ja)):
         nz_number = ja[index] - ja[index - 1]
         if nz_number == 0:
             continue
         new_ia_index = previous_ia_index + nz_number
         result_of_rows_cols = multiply_row_col(ia[previous_ia_index:new_ia_index], ar[previous_ia_index:new_ia_index],
-                                               jx, xr)
+                                               vector_nz_values_dict)
         previous_ia_index = new_ia_index
         if result_of_rows_cols:
             cr.append(result_of_rows_cols)
@@ -210,41 +234,41 @@ def multiply_vector_matrix(matrix_size_row_1, matrix_size_col_1, density, file_i
     if not os.path.exists('../execution_results'):
         os.makedirs('../execution_results')
     with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
-        f.write('vector-matrix\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
+        f.write('vector-matrix_v2\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
 
     ncr, nic, njc = csc(matrix_size_row_1, matrix_size_col_1, density, 33)
 
     if ncr != cr and nic != ic and njc != jc:
-        print("espase", matrix_size_row_1, matrix_size_col_1, density)
+        print("vector_matrix espase", matrix_size_row_1, matrix_size_col_1, density)
         with open(os.path.join('../operation_error', 'multiplication_error.txt'), 'a') as f:
-            f.write('vector matrix \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, file_id_1,
-                                                                file_id_2, density))
+            f.write('vector matrix_v2 \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, file_id_1,
+                                                                   file_id_2, density))
 
     return cr, ic, jc
 
 
-def multiply_row_col(row_indexes, row_values, vector_nz_indexes, vector_nz_values):
-    """
-    :param row_indexes: list
-    :param row_values: list
-    :param vector_nz_indexes: list
-    :param vector_nz_values: list
-    ----------------------
-    A loop in the max length of indexes lists multiply only when the elements in indexes lists is the same
-    based in inner algorithm we found
-    ----------------------
-    :return: the result of a row/col multiply by a sparse vectors elements
-    """
-    result = 0
-    row_nz_values = {}
-    for index, value in enumerate(row_indexes):
-        row_nz_values[value] = row_values[index]
-
-    for index, value in enumerate(vector_nz_indexes):
-        if value in row_nz_values:
-            result += row_nz_values[value] * vector_nz_values[index]
-
-    return result
+# def multiply_row_col(row_indexes, row_values, vector_nz_indexes, vector_nz_values):
+#     """
+#     :param row_indexes: list
+#     :param row_values: list
+#     :param vector_nz_indexes: list
+#     :param vector_nz_values: list
+#     ----------------------
+#     A loop in the max length of indexes lists multiply only when the elements in indexes lists is the same
+#     based in inner algorithm we found
+#     ----------------------
+#     :return: the result of a row/col multiply by a sparse vectors elements
+#     """
+#     result = 0
+#     row_nz_values = {}
+#     for index, value in enumerate(row_indexes):
+#         row_nz_values[value] = row_values[index]
+#
+#     for index, value in enumerate(vector_nz_indexes):
+#         if value in row_nz_values:
+#             result += row_nz_values[value] * vector_nz_values[index]
+#
+#     return result
 
 
 # def multiply_row_col(row_indexes, row_values, vector_nz_indexes, vector_nz_values):
@@ -280,8 +304,8 @@ def multiply_row_col(row_indexes, row_values, vector_nz_indexes, vector_nz_value
 #     return result
 
 
-def multiply_matrix_matrix(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2,
-                           matrix_size_col_2, file_id_2):
+def multiply_matrix_matrix(matrix_size_row_1, matrix_size_col_1, matrix_size_row_2, matrix_size_col_2, density,
+                           file_id_1, file_id_2):
     """
     :param matrix_size_row_1: int
     :param matrix_size_col_1: int
@@ -338,7 +362,9 @@ def multiply_matrix_matrix(matrix_size_row_1, matrix_size_col_1, density, file_i
         ncr, nic, njc = csr(matrix_size_col_1, matrix_size_row_2, density, 34)
 
         if ncr != cr and nic != ic and njc != jc:
-            print("espase", matrix_size_col_1, matrix_size_row_2, density)
+            print(len(ncr), len(cr), len(nic), len(ic), len(njc), len(jc))
+            print("espase matrix matrix", matrix_size_row_1, matrix_size_col_1, matrix_size_row_2, matrix_size_col_2,
+                  density, file_id_1, file_id_2)
             with open(os.path.join('../operation_error', 'multiplication_error.txt'), 'a') as f:
                 f.write('matrix matrix \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_col_1, matrix_size_row_2, file_id_1,
                                                                     file_id_2, density))
@@ -397,16 +423,13 @@ if __name__ == '__main__':
                                      int(sys.argv[6]),
                                      int(sys.argv[7]), int(sys.argv[8]))
     elif sys.argv[1] == 'matrix_vector':
-        multiply_matrix_vector(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]),
-                               int(sys.argv[6]),
-                               int(sys.argv[7]), int(sys.argv[8]))
+        multiply_matrix_vector(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]),
+                               float(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8]))
     elif sys.argv[1] == 'vector_matrix':
-        multiply_vector_matrix(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]),
-                               int(sys.argv[6]),
-                               int(sys.argv[7]), int(sys.argv[8]))
+        multiply_vector_matrix(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]),
+                               float(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8]))
     elif sys.argv[1] == 'matrix_matrix':
-        multiply_matrix_matrix(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]),
-                               int(sys.argv[6]),
-                               int(sys.argv[7]), int(sys.argv[8]))
+        multiply_matrix_matrix(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]),
+                               float(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8]))
     else:
         print('You choose wrong algorithm.')

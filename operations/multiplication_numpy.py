@@ -35,7 +35,8 @@ def write_(matrix, matrix_size_row, matrix_size_col, density, operation_type):
         file_id = 33
     else:
         file_id = 34
-    with open(os.path.join('../data_files', 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' + str(density) + '_' + str(file_id) + '.txt'), 'w') as f:
+    with open(os.path.join('../data_files', 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' +
+                                            str(density) + '_' + str(file_id) + '.txt'), 'w') as f:
         f.write(data_to_write)
 
 
@@ -134,8 +135,8 @@ def numpy_matrix_vector(matrix_size_row_1, matrix_size_col_1, matrix_size_row_2,
     if not os.path.exists('../execution_results'):
         os.makedirs('../execution_results')
     with open(os.path.join('../execution_results', 'multiplication_numpy_time.txt'), 'a') as f:
-        f.write('matrix vector numpy\t%s\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, matrix_size_col_2,
-                                                             density, total_time))
+        f.write('matrix vector numpy\t%s\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1,
+                                                                 matrix_size_col_2, density, total_time))
     write_(result, matrix_size_row_2, matrix_size_col_2, density, 'matrix_vector')
     return result
 
@@ -158,7 +159,7 @@ def numpy_vector_matrix(matrix_size_row_1, matrix_size_col_1, matrix_size_row_2,
         f.write(
             'vector matrix numpy\t%s\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, matrix_size_col_2,
                                                              density, total_time))
-    write_(result, matrix_size_col_1, matrix_size_col_1, density, 'matrix_vector')
+    write_(result, matrix_size_col_1, matrix_size_col_1, density, 'vector_matrix')
     return result
 
 
@@ -171,9 +172,6 @@ def numpy_matrix_matrix(matrix_size_row_1, matrix_size_col_1, matrix_size_row_2,
     b_matrix = read_matrix_parallel(file_2)
     a_matrix = sp.csr_matrix(np.array(a_matrix))
     b_matrix = np.array(b_matrix)
-    # a_matrix = scipy.sparse.csr_matrix(a_matrix)
-    # b_matrix = scipy.sparse.csr_matrix(b_matrix)
-    # result = sp.csr_matrix(a_matrix).multiply(sp.csr_matrix(b_matrix)).todense()
     result = a_matrix.dot(b_matrix)
     total_time = time.time() - start_time
     if not os.path.exists('../execution_results'):
@@ -182,24 +180,28 @@ def numpy_matrix_matrix(matrix_size_row_1, matrix_size_col_1, matrix_size_row_2,
         f.write(
             'matrix matrix numpy\t%s\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, matrix_size_col_2,
                                                              density, total_time))
-    write_(result, matrix_size_row_2, matrix_size_col_2, density, 'matrix_matrix')
+    write_(result, matrix_size_col_1, matrix_size_row_2, density, 'matrix_matrix')
     return result
 
 
 if __name__ == '__main__':
     if sys.argv[1] == 'inner':
-        result_inner = inner_product_numpy(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]),
-                                           int(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8]))
+        result_inner = inner_product_numpy(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]),
+                                           float(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8]))
     elif sys.argv[1] == 'outer':
-        result_outer = outer_product_numpy(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]),
-                                           int(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8]))
+        result_outer = outer_product_numpy(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]),
+                                           float(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8]))
     elif sys.argv[1] == 'matrix_vector':
-        result_matrix_vector = numpy_matrix_vector(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]),
-                                                   int(sys.argv[5]), int(sys.argv[6]), int(sys.argv[7]),
+        result_matrix_vector = numpy_matrix_vector(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]),
+                                                   int(sys.argv[5]), float(sys.argv[6]), int(sys.argv[7]),
+                                                   int(sys.argv[8]))
+    elif sys.argv[1] == 'vector_matrix':
+        result_matrix_vector = numpy_vector_matrix(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]),
+                                                   int(sys.argv[5]), float(sys.argv[6]), int(sys.argv[7]),
                                                    int(sys.argv[8]))
     elif sys.argv[1] == 'matrix_matrix':
-        result_matrix_matrix = numpy_matrix_matrix(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]),
-                                                   int(sys.argv[5]), int(sys.argv[6]), int(sys.argv[7]),
+        result_matrix_matrix = numpy_matrix_matrix(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]),
+                                                   int(sys.argv[5]), float(sys.argv[6]), int(sys.argv[7]),
                                                    int(sys.argv[8]))
     else:
-        print('You choose wrong algorithm.')
+        print('numpy You choose wrong algorithm.', sys.argv)
