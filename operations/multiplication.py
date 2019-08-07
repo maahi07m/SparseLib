@@ -7,6 +7,7 @@ sys.path.append('../')
 from compress.csr_coo import csr
 from compress.diagonal_csc import csc
 
+
 def inner_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2, matrix_size_col_2,
                   file_id_2):
     """
