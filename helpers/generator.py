@@ -11,7 +11,7 @@ import numpy as np
 from scipy.sparse import random
 
 
-def generate_sparse_matrix(lb, ub, m, n, dens):
+def __generate_matrix(lb, ub, m, n, dens):
     """
     :param lb: int
     :param ub: int
@@ -29,7 +29,7 @@ def generate_sparse_matrix(lb, ub, m, n, dens):
     return generated_matrix
 
 
-def write_matrix_to_file(first_dimension, second_dimension, density, file_id, matrix, file_path):
+def __write_matrix_to_file(first_dimension, second_dimension, density, file_id, matrix, file_path):
     """
     :param first_dimension: int
     :param second_dimension: int
@@ -67,8 +67,8 @@ def __prepare_matrix(line):
     return data_to_write
 
 
-def generate(first_dimension, second_dimension, density, file_id=1, lower_bound=-1000, upper_bound=100,
-             file_path='../'):
+def generate_sparse_matrix(first_dimension, second_dimension, density, file_id=1, return_list=False, lower_bound=-1000,
+                           upper_bound=100, file_path='../'):
     """
     :param first_dimension: int
     :param second_dimension: int
@@ -76,23 +76,32 @@ def generate(first_dimension, second_dimension, density, file_id=1, lower_bound=
     :param file_id: int
     :param lower_bound: int
     :param upper_bound: int
+    :param return_list: boolean
     :param file_path: string
     ----------------------
-    Helper function to call generated_matrix to create the sparse matrix and write_matrix_to_file to save the matrix in
-    a txt file
+    Helper function that generate a sparse matrix and return it as a list of list or write it to a file
     ----------------------
     :return: -
     """
-    generated_matrix = generate_sparse_matrix(lower_bound, upper_bound, first_dimension, second_dimension, density)
-    write_matrix_to_file(str(first_dimension), str(second_dimension), str(density), str(file_id), generated_matrix,
-                         file_path=file_path)
+    generated_matrix = __generate_matrix(lower_bound, upper_bound, first_dimension, second_dimension, density)
+    if return_list:
+        return generated_matrix.toarray()
+    else:
+        __write_matrix_to_file(str(first_dimension), str(second_dimension), str(density), str(file_id),
+                               generated_matrix, file_path=file_path)
     # print(generated_matrix.A)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 7:
-        generate(int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]),
-                 int(sys.argv[6]))
-    else:
-        generate(int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]))
+    if len(sys.argv) == 8:
+        # in case bounds and boolean variable which return or write the matrix in txt file are given
+        generate_sparse_matrix(int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]),
+                               bool(sys.argv[5]), int(sys.argv[6]), int(sys.argv[7]))
+    elif len(sys.argv) == 6:
+        # in case bounds are NOT given but boolean variable which return or write the matrix in txt file is given
+        generate_sparse_matrix(int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]),
+                               bool(sys.argv[5]))
         # generate(11, 12, 0.5, 1)
+    else:
+        # in case only dimensions, density and file_id are given
+        generate_sparse_matrix(int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]))
