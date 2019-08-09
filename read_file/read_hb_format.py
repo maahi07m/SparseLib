@@ -5,8 +5,9 @@ import re
 import sys
 
 
-def read_file(file_name, file_path='../'):
+def read_file(file_name, return_list=False, file_path='../'):
     """
+    :param return_list: boolean
     :param file_name: string
     :param file_path: string, where to search for file
     """
@@ -18,10 +19,12 @@ def read_file(file_name, file_path='../'):
             m, n = int(head[2][1]), int(head[2][2])
             if int(head[1][4]) != 0:
                 raise NotImplementedError("No supported format!")
-
             matrix_type = head[2][0]
             matrix = __choose_function(matrix_type, f, number_of_pointers, number_of_row, numerical_values, m, n)
-            __write_matrix_to_file(m, n, matrix, file_path)
+            if return_list:
+                return matrix
+            else:
+                __write_matrix_to_file(m, n, matrix, file_path)
     except EOFError:
         sys.exit('EOFError')
     except FileNotFoundError:
