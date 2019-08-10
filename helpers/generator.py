@@ -46,14 +46,12 @@ def __write_matrix_to_file(first_dimension, second_dimension, density, file_id, 
     matrix = matrix.toarray()
     number_process = mp.cpu_count()
     pool = mp.Pool(number_process)
-    start_time = time.time()
     data_to_write = ''.join(pool.map(__prepare_matrix, matrix))
     pool.close()
     if not os.path.exists(file_path + 'data_files'):
         os.makedirs(file_path + 'data_files')
     with open(os.path.join(file_path+'data_files', file_name), 'w') as f:
         f.write(data_to_write)
-    print(time.time() - start_time)
 
 
 def __prepare_matrix(line):
@@ -89,7 +87,6 @@ def generate_sparse_matrix(first_dimension, second_dimension, density, file_id=1
     else:
         __write_matrix_to_file(str(first_dimension), str(second_dimension), str(density), str(file_id),
                                generated_matrix, file_path=file_path)
-    # print(generated_matrix.A)
 
 
 if __name__ == '__main__':
