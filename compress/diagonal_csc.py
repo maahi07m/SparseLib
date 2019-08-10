@@ -1,25 +1,58 @@
 """To run: python3 diagonal_csc.py <size of rows> <size of cols> <density> <file_id>"""
-import os
 import sys
-import time
-
 import numpy as np
+import multiprocessing as mp
+from functools import singledispatch
+try:
+    from diagonal_csc_algorithms import csc_algorithm, diagonal_algorithm
+except ImportError:
+    from .diagonal_csc_algorithms import csc_algorithm, diagonal_algorithm
 
 sys.path.append('../')
 from read_file.matrix_read import read_matrix_parallel, read_matrix_sequentially
 
 
-# TODO : check if appends has problem when directory does not exist
+@singledispatch
+def diagonal(matrix: list):
+    """
+    :param matrix: list of lists
+    ----------------------
+    the user gives a list of lists
+    ----------------------
+    :return: two vectors, more specifically is the matrix stored in diagonal format
+    """
+    return diagonal_algorithm(np.array(matrix))
 
 
-def diagonal(matrix_size_row, matrix_size_col, density, file_id, parallel=True, write_time=False, file_path='../'):
+@diagonal.register
+def _diagonal(file_name: str, parallel=True, number_process=mp.cpu_count(), file_path='../'):
+    """
+    :param file_name: string
+    :param parallel: boolean
+    :param number_process: int
+    :param file_path: string
+    ----------------------
+    he user gives a string-file_name of the matrix
+    ----------------------
+    :return: two vectors, more specifically vectors represent the matrix stored in diagonal format
+    """
+    if parallel:
+        matrix = np.array(read_matrix_parallel(file_name, number_process=number_process, file_path=file_path))
+        return diagonal_algorithm(matrix)
+    else:
+        matrix = np.array(read_matrix_sequentially(file_name, file_path=file_path))
+        return diagonal_algorithm(matrix)
+
+
+@diagonal.register
+def _diagonal(matrix_size_row: int, matrix_size_col: int, density: float, file_id: int, parallel=True,
+              number_process=mp.cpu_count(), file_path='../'):
     """
     :param matrix_size_row: int
     :param matrix_size_col: int
     :param density: float
     :param file_id: int
     :param parallel: boolean
-    :param write_time: boolean
     :param file_path: string
     ----------------------
     Read and store files' non zeros diagonals
@@ -27,184 +60,63 @@ def diagonal(matrix_size_row, matrix_size_col, density, file_id, parallel=True, 
     :return: two lists ad, la, the first one contains the non zero values, the second one contains pointers for each
     diagonal about the range from the main diagonal
     """
-    global A
     file_name = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' + str(density) + '_' + \
                 str(file_id) + '.txt'
     if parallel:
-        A = np.array(read_matrix_parallel(file_name, matrix_size_row, matrix_size_col, density, True, 4, file_path))
+        A = np.array(read_matrix_parallel(file_name, matrix_size_row, matrix_size_col, density, True,
+                                          number_process=number_process, file_path=file_path))
+        return diagonal_algorithm(A)
     else:
         A = np.array(read_matrix_sequentially(file_name, matrix_size_row, matrix_size_col, density, file_path))
+        return diagonal_algorithm(A)
 
-    la, ad = [], [[]]
-    a_length = len(A)
-    start_time = time.time()
 
-    # main diagonal
-    main_diagonal = get_main_diagonal(a_length)
+@singledispatch
+def csc(matrix: list):
+    """
+    :param matrix: list of lists
+    ---------------------
+    the user gives a list of lists
+    ---------------------
+    :return: three vectors, the first contains the nz values, the second the number of nz values in each col and the
+    third the pointers of row for every nz value
+    """
+    return csc_algorithm(np.array(matrix))
 
-    # upper diagonal
-    upper_diagonals = []
-    for index in range(1, a_length):
-        ad.append([])  # start initializing ad array
-        upper_inner_diagonal = get_upper_inner_diagonal(index, a_length)
-        if upper_inner_diagonal:
-            la.append(index)
-            upper_diagonals.append(upper_inner_diagonal)
 
-    # lower diagonal
-    lower_diagonals = []
-    for index in range(a_length - 1, 0, -1):
-        lower_inner_diagonal = get_lower_inner_diagonal(index, a_length)
-        if lower_inner_diagonal:
-            la.append(-1 * index)
-            lower_diagonals.append(lower_inner_diagonal)
-
-    # create ad array
-    ad = tuple(ad)  # tuple or list or numpy
-    if main_diagonal:
-        create_ad_with_main_diagonal(ad, main_diagonal, upper_diagonals, lower_diagonals, a_length)
+@csc.register
+def _csc(file_name: str, parallel=True, number_process=mp.cpu_count(), file_path='../'):
+    """
+    :param file_name: string
+    :param parallel: boolean
+    :param number_process: int
+    :param file_path: string
+    ---------------------
+    the user gives a string-file_name of the matrix
+    ---------------------
+    :return: three vectors, the first contains the nz values, the second the number of nz values in each col and the
+    third the pointers of row for every nz value
+    """
+    if parallel:
+        matrix = np.array(read_matrix_parallel(file_name, number_process=number_process, file_path=file_path))
+        return csc_algorithm(matrix)
     else:
-        create_ad_without_main_diagonal(ad, upper_diagonals, lower_diagonals, a_length)
-
-    if write_time:
-        total_time = time.time() - start_time
-        if not os.path.exists(file_path + 'execution_results'):
-            os.makedirs(file_path + 'execution_results')
-        with open(os.path.join(file_path+'execution_results', 'execution_time.txt'), 'a') as f:
-            f.write('Diagonal\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
-        # print("total time : ", total_time)
-
-    return ad, la
+        matrix = np.array(read_matrix_sequentially(file_name, file_path=file_path))
+        return csc_algorithm(matrix)
 
 
-def create_ad_with_main_diagonal(ad, main_diagonal, upper_diagonals, lower_diagonals, a_length):
-    """
-    :param ad: list
-    :param main_diagonal: list
-    :param upper_diagonals: list
-    :param lower_diagonals: list
-    :param a_length: int
-    """
-    row = 0
-    uppers_number = len(upper_diagonals)
-    lowers_number = len(lower_diagonals)
-    while row < a_length:
-        ad[row].append(main_diagonal[row])
-        for index in range(uppers_number):
-            ad[row].append(upper_diagonals[index][row])
-
-        for index in range(lowers_number):
-            ad[row].append(lower_diagonals[index][row])
-
-        row += 1
-
-
-def create_ad_without_main_diagonal(ad, upper_diagonals, lower_diagonals, a_length):
-    """
-    :param ad: list
-    :param upper_diagonals: list
-    :param lower_diagonals: list
-    :param a_length: int
-    """
-    row = 0
-    uppers_number = len(upper_diagonals)
-    lowers_number = len(lower_diagonals)
-
-    while row < a_length:
-        for index in range(uppers_number):
-            ad[row].append(upper_diagonals[index][row])
-
-        for index in range(lowers_number):
-            ad[row].append(lower_diagonals[index][row])
-        row += 1
-
-
-def get_upper_inner_diagonal(col, a_length):
-    """
-    :param col: list
-    :param a_length: int
-    ----------------------
-    :return: returns a list with non zero values if exists or an empty list
-    """
-    found_nv = False
-    temp_diagonal = []
-    mine_row_index = 0
-    for index in range(col, a_length):  # 0,5 1,6
-        value = A[mine_row_index][index]
-        if value != 0:
-            found_nv = True
-        temp_diagonal.append(value)
-        mine_row_index += 1
-        if mine_row_index == a_length:
-            break
-
-    if found_nv:
-        left_zeros = a_length - len(temp_diagonal)
-        for index in range(left_zeros):
-            temp_diagonal.append(0)
-        return temp_diagonal
-    else:
-        return []
-
-
-def get_lower_inner_diagonal(row, a_length):
-    """
-    :param row: list
-    :param a_length: int
-    ----------------------
-    :return: returns a list with non zero values if exists or an empty list
-    """
-    found_nv = False
-    temp_diagonal = []
-    mine_col_index = 0
-    for index in range(row, a_length):
-        value = A[index][mine_col_index]
-        if value != 0:
-            found_nv = True
-        temp_diagonal.append(value)
-        mine_col_index += 1
-        if mine_col_index == a_length:
-            break
-
-    if found_nv:
-        left_zeros = a_length - len(temp_diagonal)
-        return ([0] * left_zeros) + temp_diagonal
-    else:
-        return []
-
-
-def get_main_diagonal(a_length):
-    """
-    :param a_length: int
-    ----------------------
-    :return: returns a list with non zero values if exists or an empty list
-    """
-    main_diagonal = []
-    found_nv = False
-    for index in range(a_length):
-        value = A[index][index]
-        if value != 0:
-            found_nv = True
-        main_diagonal.append(value)
-    if found_nv:
-        return main_diagonal
-    else:
-        return []
-
-
-def csc(matrix_size_row, matrix_size_col, density, file_id, parallel=True, write_time=False, file_path='../'):
+@csc.register
+def _csc(matrix_size_row: int, matrix_size_col: int, density: float, file_id: int, parallel=True, file_path='../'):
     """
     :param matrix_size_row: int
     :param matrix_size_col: int
     :param density: float
     :param file_id: int
     :param parallel: boolean
-    :param write_time: boolean
     :param file_path: string
     ----------------------
-    Convert a matrix 1-d, 2-d to csc format write the execution time in a txt file, if parallel the initial matrix will
-    be read parallel otherwise sequentially
-
+    the user gives dimensions, density and file_id of the txt file - matrix
+    ----------------------
     :return: three lists ar, ia, ja, the first one contains the non zero values, the second one the row-pointers for
     each non zero value, the third one contains the number of non zero values in a line (always the first element is 0
     and the last one the number of rows + 1)
@@ -214,40 +126,27 @@ def csc(matrix_size_row, matrix_size_col, density, file_id, parallel=True, write
     if parallel:
         file_matrix = np.array(read_matrix_parallel(file_name, matrix_size_row, matrix_size_col, density, True, 4,
                                                     file_path))
+        return csc_algorithm(file_matrix)
     else:
         file_matrix = np.array(read_matrix_sequentially(file_name, matrix_size_row, matrix_size_col, density,
                                                         file_path))
-    start_time = time.time()
-    ar, ia, ja = [], [], [0]
-    ne_counter = 0
-    file_matrix = np.transpose(file_matrix)
-    for col, line in enumerate(file_matrix):
-        for row, value in enumerate(line):
-            if value != 0:
-                ar.append(value)
-                ne_counter += 1
-                ia.append(row)
-
-                if len(ja) == 0:
-                    ja.append(col)
-        ja.append(ne_counter)
-    total_time = time.time() - start_time
-
-    if write_time:
-        if not os.path.exists(file_path + 'execution_results'):
-            os.makedirs(file_path + 'execution_results')
-        with open(os.path.join(file_path+'execution_results', 'execution_time.txt'), 'a') as f:
-            f.write('CSC\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
-
-    return ar, ia, ja
+        return csc_algorithm(file_matrix)
 
 
 if __name__ == '__main__':
     if len(sys.argv) == 6:
         if sys.argv[1].lower() == 'csc':
-            AR, IA, JA = csc(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], True, True)
+            AR, IA, JA = csc(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]), True)
+            AR1, IA1, JA1 = csc('output_10_10_0.05_1.txt')
+            AR2, IA2, JA2 = csc(read_matrix_parallel('output_10_10_0.05_1.txt'))
         elif sys.argv[1].lower() == 'diagonal':
-            diagonal(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], True, True)
+            AR, IA = diagonal(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]), True)
+            AR1, IA1 = diagonal('output_10_10_0.05_1.txt')
+            AR2, IA2 = diagonal(read_matrix_parallel('output_10_10_0.05_1.txt'))
+            if AR==AR1 and AR1==AR2:
+                print('ok')
+            if IA==IA1 and IA1==IA2:
+                print('ok')
     elif len(sys.argv) == 5:
         AR, IA, JA = csc(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], True, True)
         diagonal(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], True, True)
