@@ -95,14 +95,13 @@ def __choose_function(matrix_type, f, number_of_pointers, number_of_row, numeric
         list_numbers_per_cols = __convert_strings_to_numbers(
             __read_data(f, int(number_of_pointers)))  # csc format JA, number of values per line
         if len(list_numbers_per_cols) != int(n) + 1:  # len(JA) != number of columns +1
-            print('Wrong file format')
+            raise TypeError('Wrong file format')
         else:
             list_indices_of_rows = __convert_strings_to_numbers(
                 __read_data(f, int(number_of_row)))  # IA,  rows' indices for every column
-            list_of_data = __convert_strings_to_numbers(__read_data(f, int(numerical_values)),
-                                                        convert_to_int=False)  # AR
+            list_of_data = __read_ar_values(f, int(numerical_values))  # AR
             if len(list_of_data) != len(list_indices_of_rows):  # len(AR) != len(IA)
-                print('Wrong file format')
+                raise TypeError('Wrong file format')
             else:
                 matrix = __create_rs_cs(list_of_data, list_indices_of_rows, list_numbers_per_cols, m, n)
 
@@ -110,13 +109,13 @@ def __choose_function(matrix_type, f, number_of_pointers, number_of_row, numeric
         list_numbers_per_cols = __convert_strings_to_numbers(
             __read_data(f, int(number_of_pointers)))  # csc format JA, number of values per line
         if len(list_numbers_per_cols) != int(n) + 1:  # len(JA) != number of columns + 1
-            print('Wrong file format')
+            raise TypeError('Wrong file format')
         else:
             list_indices_of_rows = __convert_strings_to_numbers(
                 __read_data(f, int(number_of_row)))  # IA, rows' indices for every column
-            list_of_data = __read_ru_values(f, int(numerical_values))  # AR
+            list_of_data = __read_ar_values(f, int(numerical_values))  # AR
             if len(list_of_data) != len(list_indices_of_rows):  # len(AR) != len(IA)
-                print('Wrong file format')
+                raise TypeError('Wrong file format')
             else:
                 matrix = __create_ru_cu(list_of_data, list_indices_of_rows, list_numbers_per_cols, m, n)
     else:
@@ -135,7 +134,7 @@ def __create_rs_cs(ar, ia, ja, m, n):
     :return: generates and returns the real or complex symmetric matrix
     """
     matrix = [[0 for _ in range(n)] for __ in range(m)]
-    print(len(ar), len(ia), len(ja))
+    # print(len(ar), len(ia), len(ja))
     for index, value in enumerate(it.islice(ja, len(ja) - 1)):
         col_values = ar[value:ja[index + 1]]
         for inner_index, inner_value in enumerate(ia[value:ja[index + 1]]):
@@ -171,7 +170,7 @@ def __create_ru_cu(ar, ia, ja, m, n):
     return matrix
 
 
-def __read_ru_values(f, number_of_lines_to_read):
+def __read_ar_values(f, number_of_lines_to_read):
     """
     :param f: file's pointer
     :param number_of_lines_to_read: int
@@ -230,5 +229,6 @@ def __find_read_file_name(m, n):
 
 
 if __name__ == '__main__':
+    # read_file(file_name="bcsstk02.rsa")
     read_file(file_name=sys.argv[1])
     # print(final_matrix)

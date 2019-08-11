@@ -57,7 +57,7 @@ def addition_algorithm_csr(ar, ia, ja, br, ib, jb):
                     c_nz_counter += 1
         ic.append(c_nz_counter)
         a_previous_row_index = new_a_row_index
-
+        b_previous_row_index = new_b_row_index
     return cr, ic, jc
 
 

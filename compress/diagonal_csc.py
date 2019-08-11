@@ -1,8 +1,10 @@
 """To run: python3 diagonal_csc.py <size of rows> <size of cols> <density> <file_id>"""
-import sys
-import numpy as np
 import multiprocessing as mp
+import sys
 from functools import singledispatch
+
+import numpy as np
+
 try:
     from diagonal_csc_algorithms import csc_algorithm, diagonal_algorithm
 except ImportError:
@@ -63,12 +65,12 @@ def _diagonal(matrix_size_row: int, matrix_size_col: int, density: float, file_i
     file_name = 'output_' + str(matrix_size_row) + '_' + str(matrix_size_col) + '_' + str(density) + '_' + \
                 str(file_id) + '.txt'
     if parallel:
-        A = np.array(read_matrix_parallel(file_name, matrix_size_row, matrix_size_col, density, True,
-                                          number_process=number_process, file_path=file_path))
-        return diagonal_algorithm(A)
+        matrix = np.array(read_matrix_parallel(file_name, matrix_size_row, matrix_size_col, density, True,
+                                               number_process=number_process, file_path=file_path))
+        return diagonal_algorithm(matrix)
     else:
-        A = np.array(read_matrix_sequentially(file_name, matrix_size_row, matrix_size_col, density, file_path))
-        return diagonal_algorithm(A)
+        matrix = np.array(read_matrix_sequentially(file_name, matrix_size_row, matrix_size_col, density, file_path))
+        return diagonal_algorithm(matrix)
 
 
 @singledispatch
