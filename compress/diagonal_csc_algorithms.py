@@ -3,10 +3,12 @@ import numpy as np
 
 def csc_algorithm(matrix):
     """
-    :param matrix: list of lists
-    ----------------------
-    :return: three vectors, the first contains the nz values, the second the number of nz values in each col and the
-    third the pointers of row for every nz value
+    :param matrix: list
+    :return: three vectors-lists AR, IA, JA.
+
+    AR contains the non zero values, IA contains the corresponding row numbers of each non zero
+    element in matrix and JA contains the relative starting position of each column
+    of matrix in array AR.
     """
     ar, ia, ja = [], [], [0]
     ne_counter = 0
@@ -28,9 +30,11 @@ def csc_algorithm(matrix):
 def diagonal_algorithm(matrix):
     """
     :param matrix: list of lists
-    ----------------------
-    :return: two vector, the fist contains the nz values of a diagonal and the second the position of each diagonal
-    from the main diagonal
+    :return: two vectors-lists AD, LA.
+
+    Each diagonal of matrix that has at least one nonzero element is stored in a column of array AD.
+    LA is a one-dimensional integer array of length nd, containing the diagonal numbers k
+    for the diagonals stored in each corresponding column in array AD.
     """
     global A
     A = matrix
@@ -113,7 +117,6 @@ def __get_upper_inner_diagonal(col, a_length):
     """
     :param col: list
     :param a_length: int
-    ----------------------
     :return: returns a list with non zero values if exists or an empty list
     """
     found_nv = False
@@ -141,7 +144,6 @@ def __get_lower_inner_diagonal(row, a_length):
     """
     :param row: list
     :param a_length: int
-    ----------------------
     :return: returns a list with non zero values if exists or an empty list
     """
     found_nv = False
@@ -166,7 +168,6 @@ def __get_lower_inner_diagonal(row, a_length):
 def __get_main_diagonal(a_length):
     """
     :param a_length: int
-    ----------------------
     :return: returns a list with non zero values if exists or an empty list
     """
     main_diagonal = []
