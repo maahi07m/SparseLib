@@ -9,7 +9,7 @@ except ImportError:
     from .diagonal_csc_algorithms import csc_algorithm, diagonal_algorithm
 
 sys.path.append('../')
-from read_file.matrix_read import read_matrix_parallel, read_matrix_sequentially
+from read_file.matrix_read import read_matrix_parallel
 
 
 @singledispatch
@@ -35,10 +35,10 @@ def diagonal(matrix: list):
 
 
 @diagonal.register
-def _diagonal(file_name: str, number_process=mp.cpu_count(), file_path='../'):
+def _diagonal(file_name: str, processes_number=mp.cpu_count(), file_path='../'):
     """
     :param file_name: string
-    :param number_process: int
+    :param processes_number: int
     :param file_path: string
     :return two vectors-lists AD, LA.
 
@@ -47,7 +47,7 @@ def _diagonal(file_name: str, number_process=mp.cpu_count(), file_path='../'):
     LA is a one-dimensional integer array of length nd, containing the diagonal numbers k
     for the diagonals stored in each corresponding column in array AD.
     """
-    matrix = np.array(read_matrix_parallel(file_name, number_process=number_process, file_path=file_path))
+    matrix = np.array(read_matrix_parallel(file_name, processes_number=processes_number, file_path=file_path))
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
         if not all(len(row) == matrix_col_size for row in matrix):
@@ -61,12 +61,13 @@ def _diagonal(file_name: str, number_process=mp.cpu_count(), file_path='../'):
 
 @diagonal.register
 def _diagonal(matrix_size_row: int, matrix_size_col: int, density: float, file_id: int,
-              number_process=mp.cpu_count(), file_path='../'):
+              processes_number=mp.cpu_count(), file_path='../'):
     """
     :param matrix_size_row: int
     :param matrix_size_col: int
     :param density: float
     :param file_id: int
+    :param processes_number int
     :param file_path: string
     :return two vectors-lists AD, LA.
 
@@ -76,8 +77,7 @@ def _diagonal(matrix_size_row: int, matrix_size_col: int, density: float, file_i
     for the diagonals stored in each corresponding column in array AD.
     """
     file_name = 'output_%d_%d_%s_%d.txt' % (matrix_size_row, matrix_size_col, str(density), file_id)
-    matrix = np.array(read_matrix_parallel(file_name, matrix_size_row, matrix_size_col, density, True,
-                                           number_process=number_process, file_path=file_path))
+    matrix = np.array(read_matrix_parallel(file_name, processes_number=processes_number, file_path=file_path))
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
         if not all(len(row) == matrix_col_size for row in matrix):
@@ -110,10 +110,10 @@ def csc(matrix: list):
 
 
 @csc.register
-def _csc(file_name: str, number_process=mp.cpu_count(), file_path='../'):
+def _csc(file_name: str, processes_number=mp.cpu_count(), file_path='../'):
     """
     :param file_name: string
-    :param number_process: int
+    :param processes_number: int
     :param file_path: string
     :return: three vectors-lists AR, IA, JA
 
@@ -122,7 +122,7 @@ def _csc(file_name: str, number_process=mp.cpu_count(), file_path='../'):
     element in matrix and JA contains the relative starting position of each column
     of matrix in array AR.
     """
-    matrix = np.array(read_matrix_parallel(file_name, number_process=number_process, file_path=file_path))
+    matrix = np.array(read_matrix_parallel(file_name, processes_number=processes_number, file_path=file_path))
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
         if not all(len(row) == matrix_col_size for row in matrix):
@@ -133,12 +133,14 @@ def _csc(file_name: str, number_process=mp.cpu_count(), file_path='../'):
 
 
 @csc.register
-def _csc(matrix_size_row: int, matrix_size_col: int, density: float, file_id: int, file_path='../'):
+def _csc(matrix_size_row: int, matrix_size_col: int, density: float, file_id: int, processes_number=mp.cpu_count(),
+         file_path='../'):
     """
     :param matrix_size_row: int
     :param matrix_size_col: int
     :param density: float
     :param file_id: int
+    :param processes_number: int
     :param file_path: string
     :return: three vectors-lists AR, IA, JA
 
@@ -148,8 +150,7 @@ def _csc(matrix_size_row: int, matrix_size_col: int, density: float, file_id: in
     of matrix in array AR.
     """
     file_name = 'output_%d_%d_%s_%d.txt' % (matrix_size_row, matrix_size_col, str(density), file_id)
-    matrix = np.array(read_matrix_parallel(file_name, matrix_size_row, matrix_size_col, density, True, 4,
-                                           file_path))
+    matrix = np.array(read_matrix_parallel(file_name, processes_number=processes_number, file_path=file_path))
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
         if not all(len(row) == matrix_col_size for row in matrix):
