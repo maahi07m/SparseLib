@@ -24,7 +24,7 @@ def __process_func(line):
      ----------------------
     :return: the line split by tabs
     """
-    return tuple([tuple(map(int, line.split('\t')))])[0]
+    return tuple([tuple(map(int, line.split()))])[0]
 
 
 def read_matrix_parallel(file_name, matrix_length_row='-', matrix_length_col='-', density='-', write_time=False,
