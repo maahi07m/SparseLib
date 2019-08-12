@@ -1,10 +1,8 @@
 """To run: python3 diagonal_csc.py <size of rows> <size of cols> <density> <file_id>"""
-import multiprocessing as mp
 import sys
-from functools import singledispatch
-
 import numpy as np
-
+import multiprocessing as mp
+from functools import singledispatch
 try:
     from diagonal_csc_algorithms import csc_algorithm, diagonal_algorithm
 except ImportError:
@@ -23,6 +21,9 @@ def diagonal(matrix: list):
     ----------------------
     :return: two vectors, more specifically is the matrix stored in diagonal format
     """
+    matrix_col_size = len(matrix[0])
+    if not all(len(row) == matrix_col_size for row in matrix):
+        raise ReferenceError("All the lines have not the same number of elements")
     return diagonal_algorithm(np.array(matrix))
 
 
@@ -40,9 +41,15 @@ def _diagonal(file_name: str, parallel=True, number_process=mp.cpu_count(), file
     """
     if parallel:
         matrix = np.array(read_matrix_parallel(file_name, number_process=number_process, file_path=file_path))
+        matrix_col_size = len(matrix[0])
+        if not all(len(row) == matrix_col_size for row in matrix):
+            raise ReferenceError("All the lines have not the same number of elements")
         return diagonal_algorithm(matrix)
     else:
         matrix = np.array(read_matrix_sequentially(file_name, file_path=file_path))
+        matrix_col_size = len(matrix[0])
+        if not all(len(row) == matrix_col_size for row in matrix):
+            raise ReferenceError("All the lines have not the same number of elements")
         return diagonal_algorithm(matrix)
 
 
@@ -66,10 +73,16 @@ def _diagonal(matrix_size_row: int, matrix_size_col: int, density: float, file_i
                 str(file_id) + '.txt'
     if parallel:
         matrix = np.array(read_matrix_parallel(file_name, matrix_size_row, matrix_size_col, density, True,
-                                               number_process=number_process, file_path=file_path))
+                                          number_process=number_process, file_path=file_path))
+        matrix_col_size = len(matrix[0])
+        if not all(len(row) == matrix_col_size for row in matrix):
+            raise ReferenceError("All the lines have not the same number of elements")
         return diagonal_algorithm(matrix)
     else:
         matrix = np.array(read_matrix_sequentially(file_name, matrix_size_row, matrix_size_col, density, file_path))
+        matrix_col_size = len(matrix[0])
+        if not all(len(row) == matrix_col_size for row in matrix):
+            raise ReferenceError("All the lines have not the same number of elements")
         return diagonal_algorithm(matrix)
 
 
@@ -83,6 +96,9 @@ def csc(matrix: list):
     :return: three vectors, the first contains the nz values, the second the number of nz values in each col and the
     third the pointers of row for every nz value
     """
+    matrix_col_size = len(matrix[0])
+    if not all(len(row) == matrix_col_size for row in matrix):
+        raise ReferenceError("All the lines have not the same number of elements")
     return csc_algorithm(np.array(matrix))
 
 
@@ -101,9 +117,15 @@ def _csc(file_name: str, parallel=True, number_process=mp.cpu_count(), file_path
     """
     if parallel:
         matrix = np.array(read_matrix_parallel(file_name, number_process=number_process, file_path=file_path))
+        matrix_col_size = len(matrix[0])
+        if not all(len(row) == matrix_col_size for row in matrix):
+            raise ReferenceError("All the lines have not the same number of elements")
         return csc_algorithm(matrix)
     else:
         matrix = np.array(read_matrix_sequentially(file_name, file_path=file_path))
+        matrix_col_size = len(matrix[0])
+        if not all(len(row) == matrix_col_size for row in matrix):
+            raise ReferenceError("All the lines have not the same number of elements")
         return csc_algorithm(matrix)
 
 
@@ -128,10 +150,16 @@ def _csc(matrix_size_row: int, matrix_size_col: int, density: float, file_id: in
     if parallel:
         file_matrix = np.array(read_matrix_parallel(file_name, matrix_size_row, matrix_size_col, density, True, 4,
                                                     file_path))
+        matrix_col_size = len(file_matrix[0])
+        if not all(len(row) == matrix_col_size for row in file_matrix):
+            raise ReferenceError("All the lines have not the same number of elements")
         return csc_algorithm(file_matrix)
     else:
         file_matrix = np.array(read_matrix_sequentially(file_name, matrix_size_row, matrix_size_col, density,
                                                         file_path))
+        matrix_col_size = len(file_matrix[0])
+        if not all(len(row) == matrix_col_size for row in file_matrix):
+            raise ReferenceError("All the lines have not the same number of elements")
         return csc_algorithm(file_matrix)
 
 
@@ -141,6 +169,12 @@ if __name__ == '__main__':
             AR, IA, JA = csc(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]), True)
             AR1, IA1, JA1 = csc('output_10_10_0.05_1.txt')
             AR2, IA2, JA2 = csc(read_matrix_parallel('output_10_10_0.05_1.txt'))
+            if AR == AR1 and AR1 == AR2:
+                print('ok')
+            if IA == IA1 and IA1 == IA2:
+                print('ok')
+            if JA==JA2 and JA1==JA2:
+                print('ok')
         elif sys.argv[1].lower() == 'diagonal':
             AR, IA = diagonal(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]), True)
             AR1, IA1 = diagonal('output_10_10_0.05_1.txt')
