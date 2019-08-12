@@ -76,10 +76,9 @@ def generate_sparse_matrix(first_dimension, second_dimension, density, file_id=1
     :param upper_bound: int
     :param return_list: boolean
     :param file_path: string
-    ----------------------
-    Helper function that generate a sparse matrix and return it as a list of list or write it to a file
-    ----------------------
     :return: -
+
+    Helper function that generate a sparse matrix and return it as a list of list or write it to a file
     """
     generated_matrix = __generate_matrix(lower_bound, upper_bound, first_dimension, second_dimension, density)
     if return_list:
