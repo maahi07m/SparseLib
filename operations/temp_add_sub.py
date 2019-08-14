@@ -12,6 +12,9 @@ except ImportError:
     from .addition_subtraction_numpy import *
 
 
+#   TODO: add validation at calls similar to multiplication
+
+
 @singledispatch
 def csr_addition_matrices_nxn(matrix_1: list, matrix_2: list):
     """

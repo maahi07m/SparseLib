@@ -37,7 +37,7 @@ def validate_operation(cr, ic, jc, npr, inp, jnp, file_name, operation_type):
     else:
         print("espase sto %s gia to %s" % (operation_type, file_name))
         with open(os.path.join('../operation_error', 'add_sub__hb_operation_error.txt'), 'a') as f:
-            f.write(operation_type + '_\t%s' % file_name)
+            f.write(operation_type + '_\t%s\n' % file_name)
 
 
 # def addition_matrices_numpy_csr(matrix_size_row, matrix_size_col, density, file_id_1, file_id_2):
