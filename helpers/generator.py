@@ -18,10 +18,9 @@ def __generate_matrix(lb, ub, m, n, dens):
     :param m: int
     :param n: int
     :param dens: float
-    ----------------------
-    Generate a sparse matrix mxn
-    ----------------------
     :return: sparse matrix
+
+    Generate a sparse matrix mxn with lower bound (lb) and upper bound (ub)
     """
     np.random.seed(int(time.time()))
     temp_matrix = random(m, n, format='csr', density=dens)
@@ -37,10 +36,9 @@ def __write_matrix_to_file(first_dimension, second_dimension, density, file_id, 
     :param file_id: int
     :param matrix: list
     :param file_path: string
-    ----------------------
-    Store in data files a txt file containing the generated matrix mxn with name e.g. "output_1000_1000_0.005_1.txt"
-    ----------------------
     :return: -
+
+    Store in data files a txt file containing the generated matrix mxn with name e.g. "output_1000_1000_0.005_1.txt"
     """
     file_name = 'output_' + first_dimension + '_' + second_dimension + '_' + density + '_' + file_id + '.txt'
     matrix = matrix.toarray()
@@ -55,6 +53,10 @@ def __write_matrix_to_file(first_dimension, second_dimension, density, file_id, 
 
 
 def __prepare_matrix(line):
+    """
+    :param line: list
+    :return: a string containing matrix's entries
+    """
     data_to_write = ''
     for index, inner in enumerate(line):
         if index == line.shape[0] - 1:
@@ -65,7 +67,7 @@ def __prepare_matrix(line):
     return data_to_write
 
 
-def generate_sparse_matrix(first_dimension, second_dimension, density, file_id=1, return_list=False, lower_bound=-1000,
+def generate_sparse_matrix(first_dimension, second_dimension, density, file_id=1, return_list=True, lower_bound=-1000,
                            upper_bound=100, file_path='../'):
     """
     :param first_dimension: int
@@ -76,7 +78,7 @@ def generate_sparse_matrix(first_dimension, second_dimension, density, file_id=1
     :param upper_bound: int
     :param return_list: boolean
     :param file_path: string
-    :return: -
+    :return: a list
 
     Helper function that generate a sparse matrix and return it as a list of list or write it to a file
     """

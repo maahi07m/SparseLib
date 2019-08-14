@@ -1,9 +1,12 @@
 def csr_algorithm(file_matrix):
     """
     :param file_matrix: list of lists
-    ----------------------
-    :return: three vectors, the first contains the nz values, the second contains the number of nz values in each row
-    and the third contains the pointer of cols in which a nz value exists
+    :return: three vectors-lists AR, IA, JA.
+
+    Compress a matrix 1-d or 2-d to csr format using the function csr_algorithm.
+    AR contains the non zero values, IA contains the relative starting position of each row
+    of matrix in array AR and JA contains the corresponding column numbers of each non zero
+    element in matrix.
     """
     ar, ia, ja = [], [], []
     ia.append(0)
@@ -22,9 +25,11 @@ def csr_algorithm(file_matrix):
 def coo_algorithm(file_matrix):
     """
     :param file_matrix: list
-    ----------------------
-    :return: three vectors, the first is the nz values, the second and the third the pointers of rows and cols
-    respectively in which a nz value exists
+    :return: three vectors-lists AR, IA, JA.
+
+    AR contains the non zero values, IA contains the corresponding row number of each non
+    zero element in matrix and JA contains the corresponding column number of each non
+    zero element in matrix.
     """
     ar, ia, ja = [], [], []
     for row, line in enumerate(file_matrix):
