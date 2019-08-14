@@ -1,9 +1,5 @@
 """This script calculate the addition and subtraction of two matrices compressed in csr or csc format and stored the
     results in a file.
-    To run: python3 addition_subtraction.py <operation_type> <algorithm name> <size of rows> <size of cols> <density>
-    <file_id_1> <file_id_2>
-    or
-    To run: python3 addition_subtraction.py <size of rows> <size of cols> <density> <file_id_1> <file_id_2>
 """
 import os
 import sys
