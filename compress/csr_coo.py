@@ -94,7 +94,7 @@ def coo(matrix: list):
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
         if not all(len(row) == matrix_col_size for row in matrix):
-            raise ReferenceError("All the lines have not the same number of elements")
+            raise ValueError("All the lines have not the same number of elements")
         return coo_algorithm(matrix)
     else:
         raise ValueError('Empty matrix')
@@ -117,7 +117,7 @@ def _coo(file_name: str, processes_number=mp.cpu_count(), file_path='../'):
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
         if not all(len(row) == matrix_col_size for row in matrix):
-            raise ReferenceError("All the lines have not the same number of elements")
+            raise ValueError("All the lines have not the same number of elements")
         return coo_algorithm(matrix)
     else:
         raise ValueError('Empty matrix')
@@ -145,7 +145,7 @@ def _coo(matrix_size_row: int, matrix_size_col: int, density: float, file_id: in
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
         if not all(len(row) == matrix_col_size for row in matrix):
-            raise ReferenceError("All the lines have not the same number of elements")
+            raise ValueError("All the lines have not the same number of elements")
         return coo_algorithm(matrix)
     else:
         raise ValueError('Empty matrix')
