@@ -26,7 +26,7 @@ def diagonal(matrix: list):
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
         if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All the lines have not the same number of elements")
+            raise ValueError("All rows in matrix must have the same length")
         if len(matrix) != matrix_col_size:
             ValueError('Matrix must be nxn')
         return diagonal_algorithm(np.array(matrix))
@@ -51,7 +51,7 @@ def _diagonal(file_name: str, processes_number=mp.cpu_count(), file_path='../'):
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
         if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All the lines have not the same number of elements")
+            raise ValueError("All rows in matrix must have the same length")
         if len(matrix) != matrix_col_size:
             ValueError('Matrix must be nxn')
         return diagonal_algorithm(matrix)
@@ -81,7 +81,7 @@ def _diagonal(matrix_size_row: int, matrix_size_col: int, density: float, file_i
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
         if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All the lines have not the same number of elements")
+            raise ValueError("All rows in matrix must have the same length")
         if len(matrix) != matrix_col_size:
             ValueError('Matrix must be nxn')
         return diagonal_algorithm(matrix)
@@ -103,7 +103,7 @@ def csc(matrix: list):
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
         if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All the lines have not the same number of elements")
+            raise ValueError("All rows in matrix must have the same length")
         return csc_algorithm(np.array(matrix))
     else:
         raise ValueError('Empty matrix')
@@ -126,7 +126,7 @@ def _csc(file_name: str, processes_number=mp.cpu_count(), file_path='../'):
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
         if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All the lines have not the same number of elements")
+            raise ValueError("All rows in matrix must have the same length")
         return csc_algorithm(matrix)
     else:
         raise ValueError('Empty matrix')
@@ -154,7 +154,7 @@ def _csc(matrix_size_row: int, matrix_size_col: int, density: float, file_id: in
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
         if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All the lines have not the same number of elements")
+            raise ValueError("All rows in matrix must have the same length")
         return csc_algorithm(matrix)
     else:
         raise ValueError('Empty matrix')

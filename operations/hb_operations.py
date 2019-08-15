@@ -1,4 +1,4 @@
-"""This script calculate the addition and subtraction of two matrices compressed in csr or csc format and return the
+"""This script calculates the addition and subtraction of two matrices compressed in csr or csc format and returns the
     results.
 """
 import sys
@@ -25,6 +25,15 @@ except ImportError:
 def csr_addition_matrices_hb(file_name_1: str, file_name_2: str):
     matrix_1 = read_file(file_name=file_name_1, return_list=True)
     matrix_2 = read_file(file_name=file_name_2, return_list=True)
+
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
     ar, ia, ja = csr(matrix_1)
     if matrix_1 == matrix_2:
         br, ib, jb = ar, ia, ja
@@ -37,6 +46,15 @@ def csr_addition_matrices_hb(file_name_1: str, file_name_2: str):
 def csr_subtraction_matrices_hb(file_name_1: str, file_name_2: str):
     matrix_1 = read_file(file_name=file_name_1, return_list=True)
     matrix_2 = read_file(file_name=file_name_2, return_list=True)
+
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
     ar, ia, ja = csr(matrix_1)
     if matrix_1 == matrix_2:
         br, ib, jb = ar, ia, ja
@@ -49,6 +67,15 @@ def csr_subtraction_matrices_hb(file_name_1: str, file_name_2: str):
 def csc_addition_matrices_hb(file_name_1: str, file_name_2: str):
     matrix_1 = read_file(file_name=file_name_1, return_list=True)
     matrix_2 = read_file(file_name=file_name_2, return_list=True)
+
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
     ar, ia, ja = csc(matrix_1)
     if matrix_1 == matrix_2:
         br, ib, jb = ar, ia, ja
@@ -61,6 +88,15 @@ def csc_addition_matrices_hb(file_name_1: str, file_name_2: str):
 def csc_subtraction_matrices_hb(file_name_1: str, file_name_2: str):
     matrix_1 = read_file(file_name=file_name_1, return_list=True)
     matrix_2 = read_file(file_name=file_name_2, return_list=True)
+
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
     ar, ia, ja = csc(matrix_1)
     if matrix_1 == matrix_2:
         br, ib, jb = ar, ia, ja

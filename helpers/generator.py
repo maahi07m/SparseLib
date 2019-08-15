@@ -92,16 +92,12 @@ def generate_sparse_matrix(first_dimension, second_dimension, density, file_id=1
 
 if __name__ == '__main__':
     if len(sys.argv) == 8:
-        return_list = sys.argv[5]
-        if return_list == 'False':
-            return_list = False
+        return_list = sys.argv[5].lower() == 'true'
         # in case bounds and boolean variable which return or write the matrix in txt file are given
         generate_sparse_matrix(int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]),
                                return_list, int(sys.argv[6]), int(sys.argv[7]))
     elif len(sys.argv) == 6:
-        return_list = sys.argv[5]
-        if return_list == 'False':
-            return_list = False
+        return_list = sys.argv[5].lower() == 'true'
         # in case bounds are NOT given but boolean variable which return or write the matrix in txt file is given
         generate_sparse_matrix(int(sys.argv[1]), int(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]),
                                return_list)

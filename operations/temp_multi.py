@@ -174,7 +174,7 @@ def multiply_matrix_vector(matrix: list, vector: list):
     :param vector: list
     :return: three lists cr, ic, jc, It is the result in csc format stored
 
-    Input must be: matrix mxn and vector nx1
+    Input must be: matrix mxn or nxn and vector nx1
     """
     matrix_1_col_size = len(matrix[0])
     if all(len(row) == matrix_1_col_size for row in matrix) and all(len(row) == 1 for row in vector) and \
@@ -196,7 +196,7 @@ def _multiply_matrix_vector(file_name_1: str, file_name_2: str, processes_number
     :param file_path: string
     :return: three lists cr, ic, jc, It is the result in csc format stored
 
-    Input must be: matrix mxn and vector nx1
+    Input must be: matrix mxn or nxn and vector nx1
     """
     matrix = read_matrix_parallel(file_name_1, processes_number, file_path)
     vector = read_matrix_parallel(file_name_2, processes_number, file_path)
@@ -228,7 +228,7 @@ def _multiply_matrix_vector(matrix_size_row_1: int, matrix_size_col_1: int, matr
     :param file_path: string
     :return: three lists cr, ic, jc, It is the result in csc format stored
 
-    Input must be: matrix mxn and vector nx1
+    Input must be: matrix mxn or nxn and vector nx1
     """
     if matrix_size_col_1 == matrix_size_row_2 and matrix_size_col_2 == 1:
         ar, ia, ja = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1, processes_number, file_path)
@@ -246,7 +246,7 @@ def multiply_vector_matrix(matrix: list, vector: list):
     :param vector: list
     :return: three lists cr, ic, jc. It is the result in csr format stored
 
-    Input must be: matrix nxm, vector 1xn
+    Input must be: matrix nxm or nxn and vector 1xn
     """
     matrix_1_col_size = len(matrix[0])
     matrix_2_col_size = len(vector[0])
@@ -267,7 +267,7 @@ def _multiply_vector_matrix(file_name_1: str, file_name_2: str, processes_number
     :param file_name_2: string
     :return: three lists cr, ic, jc. It is the result in csr format stored
 
-    Input must be: matrix nxm, vector 1xn
+    Input must be: matrix nxm or nxn and vector 1xn
     """
     matrix = read_matrix_parallel(file_name_1, processes_number, file_path)
     vector = read_matrix_parallel(file_name_2, processes_number, file_path)
@@ -300,7 +300,7 @@ def _multiply_vector_matrix(matrix_size_row_1: int, matrix_size_col_1: int, matr
     :param file_id_2: int
     :return: three lists cr, ic, jc. It is the result in csr format stored
 
-    Input must be: matrix nxm, vector 1xn
+    Input must be: matrix nxm or nxn and vector 1xn
     """
     if matrix_size_row_1 == matrix_size_col_2 and matrix_size_row_2 == 1:
         ar, ia, ja = csc(matrix_size_row_1, matrix_size_col_1, density, file_id_1, processes_number, file_path)

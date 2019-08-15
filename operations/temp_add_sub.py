@@ -5,6 +5,7 @@ import sys
 from functools import singledispatch
 sys.path.append('../')
 from read_file.read_hb_format import read_file
+from read_file.matrix_read import read_matrix_parallel
 try:
     from addition_subtraction_algorithm import addition_algorithm_csr, subtraction_algorithm_csr,\
         addition_algorithm_csc, subtraction_algorithm_csc
@@ -22,6 +23,14 @@ def csr_addition_matrices(matrix_1: list, matrix_2: list):
     :param matrix_2: list of lists
     :return: the result of the addition of two matrices stored in csr format
     """
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
     ar, ia, ja = csr(matrix_1)
     if matrix_1 == matrix_2:
         br, ib, jb = ar, ia, ja
@@ -39,11 +48,22 @@ def _csr_addition_matrices(file_name_1: str, file_name_2: str, processes_number=
     :param file_path: string
     :return: the result of the addition of two matrices stored in csr format
     """
-    ar, ia, ja = csr(file_name_1, processes_number, file_path)
+    matrix_1 = read_matrix_parallel(file_name_1, processes_number, file_path)
+    matrix_2 = read_matrix_parallel(file_name_2, processes_number, file_path)
+
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
+    ar, ia, ja = csr(matrix_1)
     if file_name_2 == file_name_1:
         br, ib, jb = ar, ia, ja
     else:
-        br, ib, jb = csr(file_name_2, processes_number, file_path)
+        br, ib, jb = csr(matrix_2)
     return addition_algorithm_csr(ar, ia, ja, br, ib, jb)
 
 
@@ -63,6 +83,12 @@ def _csr_addition_matrices(matrix_size_row_1: int, matrix_size_col_1: int, matri
     :param file_path: string
     :return: the result of the addition of two matrices stored in csr format
     """
+    if matrix_size_row_1 == matrix_size_row_2:
+        raise ValueError('Both matrices must have same number of rows.')
+
+    if matrix_size_col_1 == matrix_size_col_2:
+        raise ValueError("Both matrices must have same number of columns")
+
     ar, ia, ja = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1, processes_number, file_path)
     if matrix_size_row_1 == matrix_size_row_2 and matrix_size_col_1 == matrix_size_col_2 and file_id_1 == file_id_2:
         br, ib, jb = ar, ia, ja
@@ -78,6 +104,14 @@ def csr_subtraction_matrices(matrix_1: list, matrix_2: list):
    :param matrix_2: list of lists
    :return: the result of the subtraction of two matrices stored in csr format
    """
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
     ar, ia, ja = csr(matrix_1)
     if matrix_1 == matrix_2:
         br, ib, jb = ar, ia, ja
@@ -93,11 +127,22 @@ def _csr_subtraction_matrices(file_name_1: str, file_name_2: str, processes_numb
     :param file_name_2: string
     :return: the result of the subtraction of two matrices stored in csr format
     """
-    ar, ia, ja = csr(file_name_1, processes_number, file_path)
+    matrix_1 = read_matrix_parallel(file_name_1, processes_number, file_path)
+    matrix_2 = read_matrix_parallel(file_name_2, processes_number, file_path)
+
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
+    ar, ia, ja = csr(matrix_1)
     if file_name_2 == file_name_1:
         br, ib, jb = ar, ia, ja
     else:
-        br, ib, jb = csr(file_name_2, processes_number, file_path)
+        br, ib, jb = csr(matrix_2)
     return subtraction_algorithm_csr(ar, ia, ja, br, ib, jb)
 
 
@@ -117,6 +162,12 @@ def _csr_subtraction_matrices(matrix_size_row_1: int, matrix_size_col_1: int, ma
     :param file_path: string
     :return: the result of the subtraction of two matrices stored in csr format
     """
+    if matrix_size_row_1 == matrix_size_row_2:
+        raise ValueError('Both matrices must have same number of rows.')
+
+    if matrix_size_col_1 == matrix_size_col_2:
+        raise ValueError("Both matrices must have same number of columns")
+
     ar, ia, ja = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1, processes_number, file_path)
     if matrix_size_row_1 == matrix_size_row_2 and matrix_size_col_1 == matrix_size_col_2 and file_id_1 == file_id_2:
         br, ib, jb = ar, ia, ja
@@ -132,6 +183,14 @@ def csc_addition_matrices(matrix_1: list, matrix_2: list):
    :param matrix_2: list of lists
    :return: the result of the addition of two matrices stored in csc format
    """
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
     ar, ia, ja = csc(matrix_1)
     if matrix_2 == matrix_1:
         br, ib, jb = ar, ia, ja
@@ -149,11 +208,22 @@ def _csc_addition_matrices(file_name_1: str, file_name_2: str,  processes_number
     :param file_path: string
     :return: the result of the addition of two matrices stored in csc format
     """
-    ar, ia, ja = csc(file_name_1, processes_number, file_path)
+    matrix_1 = read_matrix_parallel(file_name_1, processes_number, file_path)
+    matrix_2 = read_matrix_parallel(file_name_2, processes_number, file_path)
+
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
+    ar, ia, ja = csc(matrix_1)
     if file_name_1 == file_name_2:
         br, ib, jb = ar, ia, ja
     else:
-        br, ib, jb = csc(file_name_2, processes_number, file_path)
+        br, ib, jb = csc(matrix_2)
     return addition_algorithm_csc(ar, ia, ja, br, ib, jb)
 
 
@@ -171,6 +241,12 @@ def _csc_addition_matrices(matrix_size_row_1: int, matrix_size_col_1: int, matri
     :param file_id_2: int
     :return: the result of the addition of two matrices stored in csc format
     """
+    if matrix_size_row_1 == matrix_size_row_2:
+        raise ValueError('Both matrices must have same number of rows.')
+
+    if matrix_size_col_1 == matrix_size_col_2:
+        raise ValueError("Both matrices must have same number of columns")
+
     ar, ia, ja = csc(matrix_size_row_1, matrix_size_col_1, density, file_id_1, processes_number, file_path)
     if matrix_size_row_1 == matrix_size_row_2 and matrix_size_col_1 == matrix_size_col_2 and file_id_1 == file_id_2:
         br, ib, jb = ar, ia, ja
@@ -186,6 +262,14 @@ def csc_subtraction_matrices(matrix_1: list, matrix_2: list):
    :param matrix_2: list of lists
    :return: the result of the subtraction of tow matrices stored in csc format
    """
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
     ar, ia, ja = csc(matrix_1)
     if matrix_2 == matrix_1:
         br, ib, jb = ar, ia, ja
@@ -203,11 +287,22 @@ def _csc_subtraction_matrices(file_name_1: str, file_name_2: str, processes_numb
     :param file_path: string
     :return: the result of the subtraction of tow matrices stored in csc format
     """
-    ar, ia, ja = csc(file_name_1, processes_number, file_path)
+    matrix_1 = read_matrix_parallel(file_name_1, processes_number, file_path)
+    matrix_2 = read_matrix_parallel(file_name_2, processes_number, file_path)
+
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
+    ar, ia, ja = csc(matrix_1)
     if file_name_2 == file_name_1:
         br, ib, jb = ar, ia, ja
     else:
-        br, ib, jb = csc(file_name_2, processes_number, file_path)
+        br, ib, jb = csc(matrix_2)
     return subtraction_algorithm_csc(ar, ia, ja, br, ib, jb)
 
 
@@ -225,6 +320,12 @@ def _csc_subtraction_matrices(matrix_size_row_1: int, matrix_size_col_1: int, ma
     :param file_id_2: int
     :return: the result of the subtraction of tow matrices stored in csc format
     """
+    if matrix_size_row_1 == matrix_size_row_2:
+        raise ValueError('Both matrices must have same number of rows.')
+
+    if matrix_size_col_1 == matrix_size_col_2:
+        raise ValueError("Both matrices must have same number of columns")
+
     ar, ia, ja = csc(matrix_size_row_1, matrix_size_col_1, density, file_id_1, processes_number, file_path)
     if matrix_size_row_1 == matrix_size_row_2 and matrix_size_col_1 == matrix_size_col_2 and file_id_1 == file_id_2:
         br, ib, jb = ar, ia, ja
