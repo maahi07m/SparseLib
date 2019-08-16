@@ -3,10 +3,7 @@
 """
 import sys
 import pytest
-import os
-import numpy as np
 sys.path.append('../')
-from read_file.matrix_read import read_matrix_parallel
 from compress.csr_coo import csr
 
 
@@ -73,6 +70,12 @@ def test_csr_wrong_matrix_format_1():
 def test_csr_wrong_matrix_format_2():
     matrix = [[12, 12], ["21"]]
     with pytest.raises(ValueError, match=r"Every row in matrix must best list or tuple and have the same length"):
+        csr(matrix)
+
+
+def test_csr_wrong_matrix_format_3():
+    matrix = ""
+    with pytest.raises(TypeError, match=r"Expected list or tuple. Got"):
         csr(matrix)
 
 
