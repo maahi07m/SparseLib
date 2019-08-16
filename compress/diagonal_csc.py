@@ -23,10 +23,12 @@ def diagonal(matrix: list):
     LA is a one-dimensional integer array of length nd, containing the diagonal numbers k
     for the diagonals stored in each corresponding column in array AD.
     """
+    if type(matrix) != list and type(matrix) != tuple:
+        raise TypeError("Expected list or tuple. Got %s", type(matrix))
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
-        if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All rows in matrix must have the same length")
+        if not all((type(row) == list or type(row) == tuple) and len(row) == matrix_col_size for row in matrix):
+            raise ValueError("Every row in matrix must best list or tuple and have the same length")
         if len(matrix) != matrix_col_size:
             ValueError('Matrix must be nxn')
         return diagonal_algorithm(np.array(matrix))
@@ -48,10 +50,12 @@ def _diagonal(file_name: str, processes_number=mp.cpu_count(), file_path='../'):
     for the diagonals stored in each corresponding column in array AD.
     """
     matrix = np.array(read_matrix_parallel(file_name, processes_number=processes_number, file_path=file_path))
+    if type(matrix) != list and type(matrix) != tuple:
+        raise TypeError("Expected list or tuple. Got %s", type(matrix))
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
-        if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All rows in matrix must have the same length")
+        if not all((type(row) == list or type(row) == tuple) and len(row) == matrix_col_size for row in matrix):
+            raise ValueError("Every row in matrix must best list or tuple and have the same length")
         if len(matrix) != matrix_col_size:
             ValueError('Matrix must be nxn')
         return diagonal_algorithm(matrix)
@@ -78,10 +82,12 @@ def _diagonal(matrix_size_row: int, matrix_size_col: int, density: float, file_i
     """
     file_name = 'output_%d_%d_%s_%d.txt' % (matrix_size_row, matrix_size_col, str(density), file_id)
     matrix = np.array(read_matrix_parallel(file_name, processes_number=processes_number, file_path=file_path))
+    if type(matrix) != list and type(matrix) != tuple:
+        raise TypeError("Expected list or tuple. Got %s", type(matrix))
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
-        if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All rows in matrix must have the same length")
+        if not all((type(row) == list or type(row) == tuple) and len(row) == matrix_col_size for row in matrix):
+            raise ValueError("Every row in matrix must best list or tuple and have the same length")
         if len(matrix) != matrix_col_size:
             ValueError('Matrix must be nxn')
         return diagonal_algorithm(matrix)
@@ -100,10 +106,12 @@ def csc(matrix: list):
     element in matrix and JA contains the relative starting position of each column
     of matrix in array AR.
     """
+    if type(matrix) != list and type(matrix) != tuple:
+        raise TypeError("Expected list or tuple. Got %s", type(matrix))
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
-        if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All rows in matrix must have the same length")
+        if not all((type(row) == list or type(row) == tuple) and len(row) == matrix_col_size for row in matrix):
+            raise ValueError("Every row in matrix must best list or tuple and have the same length")
         return csc_algorithm(np.array(matrix))
     else:
         raise ValueError('Empty matrix')
@@ -123,10 +131,12 @@ def _csc(file_name: str, processes_number=mp.cpu_count(), file_path='../'):
     of matrix in array AR.
     """
     matrix = np.array(read_matrix_parallel(file_name, processes_number=processes_number, file_path=file_path))
+    if type(matrix) != list and type(matrix) != tuple:
+        raise TypeError("Expected list or tuple. Got %s", type(matrix))
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
-        if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All rows in matrix must have the same length")
+        if not all((type(row) == list or type(row) == tuple) and len(row) == matrix_col_size for row in matrix):
+            raise ValueError("Every row in matrix must best list or tuple and have the same length")
         return csc_algorithm(matrix)
     else:
         raise ValueError('Empty matrix')
@@ -151,10 +161,12 @@ def _csc(matrix_size_row: int, matrix_size_col: int, density: float, file_id: in
     """
     file_name = 'output_%d_%d_%s_%d.txt' % (matrix_size_row, matrix_size_col, str(density), file_id)
     matrix = np.array(read_matrix_parallel(file_name, processes_number=processes_number, file_path=file_path))
+    if type(matrix) != list and type(matrix) != tuple:
+        raise TypeError("Expected list or tuple. Got %s", type(matrix))
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
-        if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All rows in matrix must have the same length")
+        if not all((type(row) == list or type(row) == tuple) and len(row) == matrix_col_size for row in matrix):
+            raise ValueError("Every row in matrix must best list or tuple and have the same length")
         return csc_algorithm(matrix)
     else:
         raise ValueError('Empty matrix')
