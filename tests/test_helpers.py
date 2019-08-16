@@ -28,14 +28,14 @@ def test_generator_1xn():
 
 
 def test_generator_write_file():
-    generate_sparse_matrix(1, 4, 0.5, 1, return_list=False, file_path='')
-    assert os.path.exists('../data_files/output_1_4_0.5_1.txt') == 1
+    generate_sparse_matrix(1, 5, 0.5, 1, return_list=False, file_path='')
+    assert os.path.exists('data_files/output_1_5_0.5_1.txt') == 1
 
 
 def test_generator_file_content():
-    generate_sparse_matrix(1, 4, 0.5, 1, return_list=False)
-    matrix = read_matrix_parallel('output_1_4_0.5_1.txt', file_path='')
+    generate_sparse_matrix(1, 5, 0.5, 1, return_list=False, file_path='')
+    matrix = read_matrix_parallel('output_1_5_0.5_1.txt', file_path='')
     assert type(matrix) == tuple
     assert len(matrix) == 1
     assert type(matrix[0]) == tuple
-    assert len(matrix[0]) == 4
+    assert len(matrix[0]) == 5
