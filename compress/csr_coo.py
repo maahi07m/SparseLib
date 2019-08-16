@@ -22,8 +22,8 @@ def csr(matrix: list):
     """
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
-        if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All rows in matrix must have the same length")
+        if not all((type(row) == list or type(row) == tuple) and len(row) == matrix_col_size for row in matrix):
+            raise ValueError("Every row in matrix must best list or tuple and have the same length")
         return csr_algorithm(matrix)
     else:
         raise ValueError('Empty matrix')
@@ -45,8 +45,8 @@ def _csr(file_name: str, processes_number=mp.cpu_count(), file_path='../'):
     matrix = read_matrix_parallel(file_name, processes_number=processes_number, file_path=file_path)
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
-        if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All rows in matrix must have the same length")
+        if not all((type(row) == list or type(row) == tuple) and len(row) == matrix_col_size for row in matrix):
+            raise ValueError("Every row in matrix must best list or tuple and have the same length")
         return csr_algorithm(matrix)
     else:
         raise ValueError('Empty matrix')
@@ -73,8 +73,8 @@ def _csr(matrix_size_row: int, matrix_size_col: int, density: float, file_id: in
     matrix = read_matrix_parallel(file_name, processes_number=processes_number, file_path=file_path)
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
-        if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All rows in matrix must have the same length")
+        if not all((type(row) == list or type(row) == tuple) and len(row) == matrix_col_size for row in matrix):
+            raise ValueError("Every row in matrix must best list or tuple and have the same length")
         return csr_algorithm(matrix)
     else:
         raise ValueError('Empty matrix')
@@ -93,8 +93,8 @@ def coo(matrix: list):
     """
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
-        if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All rows in matrix must have the same length")
+        if not all((type(row) == list or type(row) == tuple) and len(row) == matrix_col_size for row in matrix):
+            raise ValueError("Every row in matrix must best list or tuple and have the same length")
         return coo_algorithm(matrix)
     else:
         raise ValueError('Empty matrix')
@@ -116,8 +116,8 @@ def _coo(file_name: str, processes_number=mp.cpu_count(), file_path='../'):
     matrix = read_matrix_parallel(file_name, processes_number=processes_number, file_path=file_path)
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
-        if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All rows in matrix must have the same length")
+        if not all((type(row) == list or type(row) == tuple) and len(row) == matrix_col_size for row in matrix):
+            raise ValueError("Every row in matrix must best list or tuple and have the same length")
         return coo_algorithm(matrix)
     else:
         raise ValueError('Empty matrix')
@@ -144,8 +144,8 @@ def _coo(matrix_size_row: int, matrix_size_col: int, density: float, file_id: in
     matrix = read_matrix_parallel(file_name, processes_number=processes_number, file_path=file_path)
     if len(matrix) != 0:
         matrix_col_size = len(matrix[0])
-        if not all(len(row) == matrix_col_size for row in matrix):
-            raise ValueError("All rows in matrix must have the same length")
+        if not all((type(row) == list or type(row) == tuple) and len(row) == matrix_col_size for row in matrix):
+            raise ValueError("Every row in matrix must best list or tuple and have the same length")
         return coo_algorithm(matrix)
     else:
         raise ValueError('Empty matrix')
