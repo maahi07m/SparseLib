@@ -30,7 +30,7 @@ def diagonal(matrix: list):
         if not all((type(row) == list or type(row) == tuple) and len(row) == matrix_col_size for row in matrix):
             raise ValueError("Every row in matrix must best list or tuple and have the same length")
         if len(matrix) != matrix_col_size:
-            ValueError('Matrix must be nxn')
+            raise ValueError('Matrix must be nxn')
         return diagonal_algorithm(np.array(matrix))
     else:
         raise ValueError('Empty matrix')
@@ -57,7 +57,7 @@ def _diagonal(file_name: str, processes_number=mp.cpu_count(), file_path='../'):
         if not all((type(row) == list or type(row) == tuple) and len(row) == matrix_col_size for row in matrix):
             raise ValueError("Every row in matrix must best list or tuple and have the same length")
         if len(matrix) != matrix_col_size:
-            ValueError('Matrix must be nxn')
+            raise ValueError('Matrix must be nxn')
         return diagonal_algorithm(matrix)
     else:
         raise ValueError('Empty matrix')
@@ -89,7 +89,7 @@ def _diagonal(matrix_size_row: int, matrix_size_col: int, density: float, file_i
         if not all((type(row) == list or type(row) == tuple) and len(row) == matrix_col_size for row in matrix):
             raise ValueError("Every row in matrix must best list or tuple and have the same length")
         if len(matrix) != matrix_col_size:
-            ValueError('Matrix must be nxn')
+            raise ValueError('Matrix must be nxn')
         return diagonal_algorithm(matrix)
     else:
         raise ValueError('Empty matrix')

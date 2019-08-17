@@ -43,6 +43,8 @@ def diagonal_algorithm(matrix):
 
     # main diagonal
     main_diagonal = __get_main_diagonal(a_length)
+    if main_diagonal:
+        la.append(0)
 
     # upper diagonal
     upper_diagonals = []
@@ -55,7 +57,8 @@ def diagonal_algorithm(matrix):
 
     # lower diagonal
     lower_diagonals = []
-    for index in range(a_length - 1, 0, -1):
+    # for index in range(a_length - 1, 0, -1):
+    for index in range(1, a_length):
         lower_inner_diagonal = __get_lower_inner_diagonal(index, a_length)
         if lower_inner_diagonal:
             la.append(-1 * index)
