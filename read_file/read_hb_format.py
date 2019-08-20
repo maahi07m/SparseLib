@@ -2,7 +2,6 @@ import glob
 import itertools as it
 import os
 import re
-import sys
 
 
 def read_file(file_name, return_list=False, file_path='../'):
@@ -26,16 +25,15 @@ def read_file(file_name, return_list=False, file_path='../'):
             else:
                 __write_matrix_to_file(m, n, matrix, file_path)
     except EOFError:
-        sys.exit('EOFError')
+        raise EOFError('EOFError')
     except FileNotFoundError:
-        sys.exit("File %s not found" % file_name)
+        raise FileNotFoundError("File %s not found" % file_name)
 
 
 def __read_header(f, number_of_header_lines):
     """
     :param f: file's pointer
     :param number_of_header_lines: int
-    ----------------------
     :return: header's data
     """
     # head contain the info of the matrix
@@ -59,7 +57,6 @@ def __read_data(f, number_of_lines_to_read):
     """
     :param f: file's pointer
     :param number_of_lines_to_read: int
-    ----------------------
     :return: read values
     """
     return [item.split() for item in list(it.islice(f, number_of_lines_to_read))]
@@ -69,7 +66,6 @@ def __convert_strings_to_numbers(list_of_strings, convert_to_int=True):
     """
     :param list_of_strings: list with values that needed to be converted
     :param convert_to_int: boolean
-    ----------------------
     :return: converted list
     """
     if convert_to_int:
@@ -87,7 +83,6 @@ def __choose_function(matrix_type, f, number_of_pointers, number_of_row, numeric
     :param numerical_values: int
     :param m: int
     :param n: int
-    ----------------------
     :return: file's 2d matrix
     """
     matrix = []
@@ -130,7 +125,6 @@ def __create_rs_cs(ar, ia, ja, m, n):
     :param ja: list
     :param m: int
     :param n: int
-    ----------------------
     :return: generates and returns the real or complex symmetric matrix
     """
     matrix = [[0 for _ in range(n)] for __ in range(m)]
@@ -153,7 +147,6 @@ def __create_ru_cu(ar, ia, ja, m, n):
     :param ja: list
     :param m: int
     :param n: int
-    ----------------------
     :return: generates and returns the real or complex non symmetric matrix
     """
     matrix = [[0 for _ in range(n)] for __ in range(m)]
@@ -174,7 +167,6 @@ def __read_ar_values(f, number_of_lines_to_read):
     """
     :param f: file's pointer
     :param number_of_lines_to_read: int
-    ----------------------
     :return: read values
     """
     values_per_line = [item for item in list(it.islice(f, number_of_lines_to_read))]
@@ -211,7 +203,6 @@ def __find_read_file_name(m, n):
     :param m: int
     :param n: int
     :return file id
-    ----------------------
     Finds the last hb file's id with the same number of rows and columns. If there is no such file, return 1
     """
     # output_m_n_hb_id.txt
@@ -226,9 +217,3 @@ def __find_read_file_name(m, n):
             id_to_use = 1
         return id_to_use
     return 1
-
-
-if __name__ == '__main__':
-    # read_file(file_name="bcsstk02.rsa")
-    read_file(file_name=sys.argv[1])
-    # print(final_matrix)
