@@ -1,6 +1,5 @@
 import multiprocessing as mp
 import os
-import sys
 
 
 def __read_file(file_name, file_path):
@@ -13,7 +12,7 @@ def __read_file(file_name, file_path):
         with open(os.path.join(file_path + 'data_files', file_name), 'r') as f:
             return f.read()
     except FileNotFoundError:
-        sys.exit("File %s not found" % file_name)
+        raise FileNotFoundError("File %s not found" % file_name)
 
 
 def __process_func(line):
