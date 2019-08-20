@@ -1,362 +1,335 @@
-"""This script calculate the addition and subtraction of two matrices compressed in csr or csc format and stored the
-    results in a file.
+"""This script calculate the addition and subtraction of two matrices compressed in csr or csc format and return the
+    results.
 """
-import os
+import multiprocessing as mp
 import sys
-import time
+from functools import singledispatch
 
-try:
-    from addition_subtraction_numpy import addition_matrices_numpy_csr, subtraction_matrices_numpy_csc, \
-        addition_matrices_numpy_csc, subtraction_matrices_numpy_csr, validate_operation
-
-except ImportError:
-    from .addition_subtraction_numpy import addition_matrices_numpy_csr, subtraction_matrices_numpy_csc, \
-        addition_matrices_numpy_csc, subtraction_matrices_numpy_csr, validate_operation
 sys.path.append('../')
+from read_file.matrix_read import read_matrix_parallel
 from compress.csr_coo import csr
 from compress.diagonal_csc import csc
+try:
+    from addition_subtraction_algorithm import addition_algorithm_csr, subtraction_algorithm_csr, \
+        addition_algorithm_csc, subtraction_algorithm_csc
+except ImportError:
+    from .addition_subtraction_algorithm import addition_algorithm_csr, subtraction_algorithm_csr, \
+        addition_algorithm_csc, subtraction_algorithm_csc
 
 
-def csr_addition_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, file_id_2):
+@singledispatch
+def csr_addition_matrices(matrix_1: list, matrix_2: list):
     """
-    :param matrix_size_row: int
-    :param matrix_size_col: int
-    :param density: float
-    :param file_id_1: int
-    :param file_id_2: int
-    ----------------------
+    :param matrix_1: list of lists
+    :param matrix_2: list of lists
     :return: the result of the addition of two matrices stored in csr format
     """
-    ar, ia, ja = csr(matrix_size_row, matrix_size_col, density, file_id_1)
-    br, ib, jb = csr(matrix_size_row, matrix_size_col, density, file_id_2)
-    cr, ic, jc = [], [0], []
-    start_time = time.time()
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
 
-    a_previous_row_index = 0
-    b_previous_row_index = 0
-    c_nz_counter = 0
-    for row_index in range(1, len(ia)):  # len(ia) = len(ib)
-        a_row_number = ia[row_index] - ia[row_index - 1]  # get A's row number
-        b_row_number = ib[row_index] - ib[row_index - 1]  # get B's row number
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
 
-        new_a_row_index = a_previous_row_index + a_row_number
-        new_b_row_index = b_previous_row_index + b_row_number
-
-        a_columns = ja[a_previous_row_index: new_a_row_index]
-        b_columns = jb[b_previous_row_index: new_b_row_index]
-        a_values = ar[a_previous_row_index: new_a_row_index]
-        b_values = br[b_previous_row_index: new_b_row_index]
-
-        a_value_index = 0
-        b_value_index = 0
-        common_col = sorted(set(a_columns).intersection(b_columns))
-        distinct_a = sorted(set(a_columns).difference(b_columns))
-        distinct_b = sorted(set(b_columns).difference(a_columns))
-        all_columns = sorted(set(a_columns + b_columns))
-        for index in all_columns:
-            if index in distinct_a:
-                cr.append(a_values[a_value_index])
-                jc.append(index)
-                a_value_index += 1
-                c_nz_counter += 1
-            elif index in distinct_b:
-                cr.append(b_values[b_value_index])
-                jc.append(index)
-                b_value_index += 1
-                c_nz_counter += 1
-            elif index in common_col:
-                new_value = a_values[a_value_index] + b_values[b_value_index]
-                if new_value == 0:
-                    a_value_index += 1
-                    b_value_index += 1
-                    continue
-                else:
-                    cr.append(new_value)
-                    jc.append(index)
-                    a_value_index += 1
-                    b_value_index += 1
-                    c_nz_counter += 1
-        ic.append(c_nz_counter)
-        a_previous_row_index = new_a_row_index
-        b_previous_row_index = new_b_row_index
-    total_time = time.time() - start_time
-    if not os.path.exists('../execution_results'):
-        os.makedirs('../execution_results')
-    with open(os.path.join('../execution_results', 'add_sub_time.txt'), 'a') as f:
-        f.write('addition_csr %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
-    return cr, ic, jc
+    ar, ia, ja = csr(matrix_1)
+    if matrix_1 == matrix_2:
+        br, ib, jb = ar, ia, ja
+    else:
+        br, ib, jb = csr(matrix_2)
+    return addition_algorithm_csr(ar, ia, ja, br, ib, jb)
 
 
-def csr_subtraction_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, file_id_2):
+@csr_addition_matrices.register
+def _csr_addition_matrices(file_name_1: str, file_name_2: str, processes_number=mp.cpu_count(), file_path='../'):
     """
-    :param matrix_size_row: int
-    :param matrix_size_col: int
+    :param file_name_1: string
+    :param file_name_2: string
+    :param processes_number: int
+    :param file_path: string
+    :return: the result of the addition of two matrices stored in csr format
+    """
+    matrix_1 = read_matrix_parallel(file_name_1, processes_number, file_path)
+    matrix_2 = read_matrix_parallel(file_name_2, processes_number, file_path)
+
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
+    ar, ia, ja = csr(matrix_1)
+    if file_name_2 == file_name_1:
+        br, ib, jb = ar, ia, ja
+    else:
+        br, ib, jb = csr(matrix_2)
+    return addition_algorithm_csr(ar, ia, ja, br, ib, jb)
+
+
+@csr_addition_matrices.register
+def _csr_addition_matrices(matrix_size_row_1: int, matrix_size_col_1: int, matrix_size_row_2: int,
+                           matrix_size_col_2: int, density: float, file_id_1: int, file_id_2: int,
+                           processes_number=mp.cpu_count(), file_path='../'):
+    """
+    :param matrix_size_row_1: int
+    :param matrix_size_col_1: int
+    :param matrix_size_row_2: int
+    :param matrix_size_col_2: int
     :param density: float
     :param file_id_1: int
     :param file_id_2: int
-    ----------------------
+    :param processes_number: int
+    :param file_path: string
+    :return: the result of the addition of two matrices stored in csr format
+    """
+    if matrix_size_row_1 == matrix_size_row_2:
+        raise ValueError('Both matrices must have same number of rows.')
+
+    if matrix_size_col_1 == matrix_size_col_2:
+        raise ValueError("Both matrices must have same number of columns")
+
+    ar, ia, ja = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1, processes_number, file_path)
+    if matrix_size_row_1 == matrix_size_row_2 and matrix_size_col_1 == matrix_size_col_2 and file_id_1 == file_id_2:
+        br, ib, jb = ar, ia, ja
+    else:
+        br, ib, jb = csr(matrix_size_row_2, matrix_size_col_2, density, file_id_2, processes_number, file_path)
+    return addition_algorithm_csr(ar, ia, ja, br, ib, jb)
+
+
+@singledispatch
+def csr_subtraction_matrices(matrix_1: list, matrix_2: list):
+    """
+   :param matrix_1: list of lists
+   :param matrix_2: list of lists
+   :return: the result of the subtraction of two matrices stored in csr format
+   """
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
+    ar, ia, ja = csr(matrix_1)
+    if matrix_1 == matrix_2:
+        br, ib, jb = ar, ia, ja
+    else:
+        br, ib, jb = csr(matrix_2)
+    return subtraction_algorithm_csr(ar, ia, ja, br, ib, jb)
+
+
+@csr_subtraction_matrices.register
+def _csr_subtraction_matrices(file_name_1: str, file_name_2: str, processes_number=mp.cpu_count(), file_path='../'):
+    """
+    :param file_name_1: string
+    :param file_name_2: string
     :return: the result of the subtraction of two matrices stored in csr format
     """
-    ar, ia, ja = csr(matrix_size_row, matrix_size_col, density, file_id_1)
-    br, ib, jb = csr(matrix_size_row, matrix_size_col, density, file_id_2)
-    cr, ic, jc = [], [0], []
-    start_time = time.time()
+    matrix_1 = read_matrix_parallel(file_name_1, processes_number, file_path)
+    matrix_2 = read_matrix_parallel(file_name_2, processes_number, file_path)
 
-    a_previous_row_index = 0
-    b_previous_row_index = 0
-    c_nz_counter = 0
-    for row_index in range(1, len(ia)):  # len(ia) = len(ib)
-        a_row_number = ia[row_index] - ia[row_index - 1]  # get A's row number
-        b_row_number = ib[row_index] - ib[row_index - 1]  # get B's row number
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
 
-        new_a_row_index = a_previous_row_index + a_row_number
-        new_b_row_index = b_previous_row_index + b_row_number
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
 
-        a_columns = ja[a_previous_row_index: new_a_row_index]
-        b_columns = jb[b_previous_row_index: new_b_row_index]
-        a_values = ar[a_previous_row_index: new_a_row_index]
-        b_values = br[b_previous_row_index: new_b_row_index]
-
-        a_value_index = 0
-        b_value_index = 0
-        common_col = sorted(set(a_columns).intersection(b_columns))
-        distinct_a = sorted(set(a_columns).difference(b_columns))
-        distinct_b = sorted(set(b_columns).difference(a_columns))
-        all_columns = sorted(set(a_columns).union(b_columns))
-        for index in all_columns:
-            if index in distinct_a:
-                cr.append(a_values[a_value_index])
-                jc.append(index)
-                a_value_index += 1
-                c_nz_counter += 1
-            elif index in distinct_b:
-                cr.append(-b_values[b_value_index])
-                jc.append(index)
-                b_value_index += 1
-                c_nz_counter += 1
-            elif index in common_col:
-                new_value = a_values[a_value_index] - b_values[b_value_index]
-                if new_value == 0:
-                    a_value_index += 1
-                    b_value_index += 1
-                    continue
-                else:
-                    cr.append(new_value)
-                    jc.append(index)
-                    a_value_index += 1
-                    b_value_index += 1
-                    c_nz_counter += 1
-        ic.append(c_nz_counter)
-        a_previous_row_index = new_a_row_index
-        b_previous_row_index = new_b_row_index
-    total_time = time.time() - start_time
-    if not os.path.exists('../execution_results'):
-        os.makedirs('../execution_results')
-    with open(os.path.join('../execution_results', 'add_sub_time.txt'), 'a') as f:
-        f.write('subtraction_csr %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
-    return cr, ic, jc
-    # return [], [], []
+    ar, ia, ja = csr(matrix_1)
+    if file_name_2 == file_name_1:
+        br, ib, jb = ar, ia, ja
+    else:
+        br, ib, jb = csr(matrix_2)
+    return subtraction_algorithm_csr(ar, ia, ja, br, ib, jb)
 
 
-def csc_addition_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, file_id_2):
+@csr_subtraction_matrices.register
+def _csr_subtraction_matrices(matrix_size_row_1: int, matrix_size_col_1: int, matrix_size_row_2: int,
+                              matrix_size_col_2: int, density: float, file_id_1: int, file_id_2: int,
+                              processes_number=mp.cpu_count(), file_path='../'):
     """
-    :param matrix_size_row: int
-    :param matrix_size_col: int
+    :param matrix_size_row_1: int
+    :param matrix_size_col_1: int
+    :param matrix_size_row_2: int
+    :param matrix_size_col_2: int
     :param density: float
     :param file_id_1: int
     :param file_id_2: int
-    ----------------------
+    :param processes_number: int
+    :param file_path: string
+    :return: the result of the subtraction of two matrices stored in csr format
+    """
+    if matrix_size_row_1 == matrix_size_row_2:
+        raise ValueError('Both matrices must have same number of rows.')
+
+    if matrix_size_col_1 == matrix_size_col_2:
+        raise ValueError("Both matrices must have same number of columns")
+
+    ar, ia, ja = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1, processes_number, file_path)
+    if matrix_size_row_1 == matrix_size_row_2 and matrix_size_col_1 == matrix_size_col_2 and file_id_1 == file_id_2:
+        br, ib, jb = ar, ia, ja
+    else:
+        br, ib, jb = csr(matrix_size_row_2, matrix_size_col_2, density, file_id_2, processes_number, file_path)
+    return subtraction_algorithm_csr(ar, ia, ja, br, ib, jb)
+
+
+@singledispatch
+def csc_addition_matrices(matrix_1: list, matrix_2: list):
+    """
+   :param matrix_1: list of lists
+   :param matrix_2: list of lists
+   :return: the result of the addition of two matrices stored in csc format
+   """
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
+    ar, ia, ja = csc(matrix_1)
+    if matrix_2 == matrix_1:
+        br, ib, jb = ar, ia, ja
+    else:
+        br, ib, jb = csc(matrix_2)
+    return addition_algorithm_csc(ar, ia, ja, br, ib, jb)
+
+
+@csc_addition_matrices.register
+def _csc_addition_matrices(file_name_1: str, file_name_2: str, processes_number=mp.cpu_count(), file_path='../'):
+    """
+    :param file_name_1: string
+    :param file_name_2: string
+    :param processes_number: int
+    :param file_path: string
     :return: the result of the addition of two matrices stored in csc format
     """
-    ar, ia, ja = csc(matrix_size_row, matrix_size_col, density, file_id_1)
-    br, ib, jb = csc(matrix_size_row, matrix_size_col, density, file_id_2)
-    cr, ic, jc = [], [], [0]
-    start_time = time.time()
+    matrix_1 = read_matrix_parallel(file_name_1, processes_number, file_path)
+    matrix_2 = read_matrix_parallel(file_name_2, processes_number, file_path)
 
-    a_previous_col_index = 0
-    b_previous_col_index = 0
-    c_nz_counter = 0
-    for col_index in range(1, len(ja)):  # len(ja) = len(jb)
-        a_col_number = ja[col_index] - ja[col_index - 1]  # get A's row number
-        b_col_number = jb[col_index] - jb[col_index - 1]  # get B's row number
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
 
-        new_a_col_index = a_previous_col_index + a_col_number
-        new_b_col_index = b_previous_col_index + b_col_number
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
 
-        a_rows = ia[a_previous_col_index: new_a_col_index]
-        b_rows = ib[b_previous_col_index: new_b_col_index]
-        a_values = ar[a_previous_col_index: new_a_col_index]
-        b_values = br[b_previous_col_index: new_b_col_index]
-
-        a_value_index = 0
-        b_value_index = 0
-        common_rows = sorted(set(a_rows).intersection(b_rows))
-        distinct_a = sorted(set(a_rows).difference(b_rows))
-        distinct_b = sorted(set(b_rows).difference(a_rows))
-        all_rows = sorted(set(a_rows).union(b_rows))
-        for index in all_rows:
-            if index in distinct_a:
-                cr.append(a_values[a_value_index])
-                ic.append(index)
-                a_value_index += 1
-                c_nz_counter += 1
-            elif index in distinct_b:
-                cr.append(b_values[b_value_index])
-                ic.append(index)
-                b_value_index += 1
-                c_nz_counter += 1
-            elif index in common_rows:
-                new_value = a_values[a_value_index] + b_values[b_value_index]
-                if new_value == 0:
-                    a_value_index += 1
-                    b_value_index += 1
-                    continue
-                else:
-                    cr.append(new_value)
-                    ic.append(index)
-                    a_value_index += 1
-                    b_value_index += 1
-                    c_nz_counter += 1
-        jc.append(c_nz_counter)
-        a_previous_col_index = new_a_col_index
-        b_previous_col_index = new_b_col_index
-    total_time = time.time() - start_time
-    if not os.path.exists('../execution_results'):
-        os.makedirs('../execution_results')
-    with open(os.path.join('../execution_results', 'add_sub_time.txt'), 'a') as f:
-        f.write('addition_csc %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
-    return cr, ic, jc
+    ar, ia, ja = csc(matrix_1)
+    if file_name_1 == file_name_2:
+        br, ib, jb = ar, ia, ja
+    else:
+        br, ib, jb = csc(matrix_2)
+    return addition_algorithm_csc(ar, ia, ja, br, ib, jb)
 
 
-def csc_subtraction_matrices_nxn(matrix_size_row, matrix_size_col, density, file_id_1, file_id_2):
+@csc_addition_matrices.register
+def _csc_addition_matrices(matrix_size_row_1: int, matrix_size_col_1: int, matrix_size_row_2: int,
+                           matrix_size_col_2: int, density: float, file_id_1: int, file_id_2: int,
+                           processes_number=mp.cpu_count(), file_path='../'):
     """
-    :param matrix_size_row: int
-    :param matrix_size_col: int
+    :param matrix_size_row_1: int
+    :param matrix_size_col_1: int
+    :param matrix_size_row_2: int
+    :param matrix_size_col_2: int
     :param density: float
     :param file_id_1: int
     :param file_id_2: int
-    ----------------------
-    :return: the result of the subtraction of two matrices in csc format
+    :return: the result of the addition of two matrices stored in csc format
     """
-    ar, ia, ja = csc(matrix_size_row, matrix_size_col, density, file_id_1)
-    br, ib, jb = csc(matrix_size_row, matrix_size_col, density, file_id_2)
-    cr, ic, jc = [], [], [0]
-    start_time = time.time()
+    if matrix_size_row_1 == matrix_size_row_2:
+        raise ValueError('Both matrices must have same number of rows.')
 
-    a_previous_col_index = 0
-    b_previous_col_index = 0
-    c_nz_counter = 0
-    for col_index in range(1, len(ja)):  # len(ja) = len(jb)
-        a_col_number = ja[col_index] - ja[col_index - 1]
-        b_col_number = jb[col_index] - jb[col_index - 1]
+    if matrix_size_col_1 == matrix_size_col_2:
+        raise ValueError("Both matrices must have same number of columns")
 
-        new_a_col_index = a_previous_col_index + a_col_number
-        new_b_col_index = b_previous_col_index + b_col_number
-
-        a_rows = ia[a_previous_col_index: new_a_col_index]
-        b_rows = ib[b_previous_col_index: new_b_col_index]
-        a_values = ar[a_previous_col_index: new_a_col_index]
-        b_values = br[b_previous_col_index: new_b_col_index]
-
-        a_value_index = 0
-        b_value_index = 0
-        common_rows = sorted(set(a_rows).intersection(b_rows))
-        distinct_a = sorted(set(a_rows).difference(b_rows))
-        distinct_b = sorted(set(b_rows).difference(a_rows))
-        all_rows = sorted(set(a_rows).union(b_rows))
-        for index in all_rows:
-            if index in distinct_a:
-                cr.append(a_values[a_value_index])
-                ic.append(index)
-                a_value_index += 1
-                c_nz_counter += 1
-            elif index in distinct_b:
-                cr.append(-b_values[b_value_index])
-                ic.append(index)
-                b_value_index += 1
-                c_nz_counter += 1
-            elif index in common_rows:
-                new_value = a_values[a_value_index] - b_values[b_value_index]
-                if new_value == 0:
-                    a_value_index += 1
-                    b_value_index += 1
-                    continue
-                else:
-                    cr.append(new_value)
-                    ic.append(index)
-                    a_value_index += 1
-                    b_value_index += 1
-                    c_nz_counter += 1
-        jc.append(c_nz_counter)
-        a_previous_col_index = new_a_col_index
-        b_previous_col_index = new_b_col_index
-    total_time = time.time() - start_time
-    if not os.path.exists('../execution_results'):
-        os.makedirs('../execution_results')
-    with open(os.path.join('../execution_results', 'add_sub_time.txt'), 'a') as f:
-        f.write('subtraction_csc %s\t%s\t%s\t%.5f\n' % (matrix_size_row, matrix_size_col, density, total_time))
-    return cr, ic, jc
-
-
-def main():
-    if len(sys.argv) == 7:
-        if sys.argv[1].lower() == 'addition' and sys.argv[2] == 'csr':
-            npr, inp, jnp = addition_matrices_numpy_csr(sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7])
-            csr_ar, csr_ia, csr_ja = csr_addition_matrices_nxn(sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6],
-                                                               sys.argv[7])
-            validate_operation(csr_ar, csr_ia, csr_ja, npr, inp, jnp, sys.argv[3], sys.argv[4], sys.argv[5],
-                               sys.argv[6], sys.argv[7], 'addition')
-
-        elif sys.argv[1].lower() == 'addition' and sys.argv[2] == 'csc':
-            npr, inp, jnp = addition_matrices_numpy_csc(sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7])
-            csc_ar, csc_ia, csc_ja = csc_addition_matrices_nxn(sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6],
-                                                               sys.argv[7])
-            validate_operation(csc_ar, csc_ia, csc_ja, npr, inp, jnp, sys.argv[3], sys.argv[4], sys.argv[5],
-                               sys.argv[6], sys.argv[7], 'addition')
-
-        elif sys.argv[1].lower() == 'subtraction' and sys.argv[2] == 'csr':
-            npr, inp, jnp = subtraction_matrices_numpy_csr(sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6],
-                                                           sys.argv[7])
-            csr_ar, csr_ia, csr_ja = csr_subtraction_matrices_nxn(sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6],
-                                                                  sys.argv[7])
-            validate_operation(csr_ar, csr_ia, csr_ja, npr, inp, jnp, sys.argv[3], sys.argv[4], sys.argv[5],
-                               sys.argv[6], sys.argv[7], 'addition')
-
-        elif sys.argv[1].lower() == 'subtraction' and sys.argv[2] == 'csc':
-            npr, inp, jnp = subtraction_matrices_numpy_csc(sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6],
-                                                           sys.argv[7])
-            csc_ar, csc_ia, csc_ja = csc_subtraction_matrices_nxn(sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6],
-                                                                  sys.argv[7])
-            validate_operation(csc_ar, csc_ia, csc_ja, npr, inp, jnp, sys.argv[3], sys.argv[4], sys.argv[5],
-                               sys.argv[6], sys.argv[7], 'addition')
-
-    elif len(sys.argv) == 6:
-        npr, inp, jnp = addition_matrices_numpy_csr(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
-        csr_ar, csr_ia, csr_ja = csr_addition_matrices_nxn(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],
-                                                           sys.argv[5])
-        validate_operation(csr_ar, csr_ia, csr_ja, npr, inp, jnp, sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],
-                           sys.argv[5], 'addition')
-
-        npr, inp, jnp = subtraction_matrices_numpy_csr(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
-        csr_ar, csr_ia, csr_ja = csr_subtraction_matrices_nxn(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],
-                                                              sys.argv[5])
-        validate_operation(csr_ar, csr_ia, csr_ja, npr, inp, jnp, sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],
-                           sys.argv[5], 'subtraction')
-
-        npr, inp, jnp = addition_matrices_numpy_csc(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
-        csc_ar, csc_ia, csc_ja = csc_addition_matrices_nxn(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],
-                                                           sys.argv[5])
-        validate_operation(csc_ar, csc_ia, csc_ja, npr, inp, jnp, sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],
-                           sys.argv[5], 'addition')
-
-        npr, inp, jnp = subtraction_matrices_numpy_csc(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
-        csr_ar, csr_ia, csr_ja = csc_subtraction_matrices_nxn(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],
-                                                              sys.argv[5])
-        validate_operation(csr_ar, csr_ia, csr_ja, npr, inp, jnp, sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],
-                           sys.argv[5], 'subtraction')
+    ar, ia, ja = csc(matrix_size_row_1, matrix_size_col_1, density, file_id_1, processes_number, file_path)
+    if matrix_size_row_1 == matrix_size_row_2 and matrix_size_col_1 == matrix_size_col_2 and file_id_1 == file_id_2:
+        br, ib, jb = ar, ia, ja
     else:
-        print("There is no main to run")
+        br, ib, jb = csc(matrix_size_row_2, matrix_size_col_2, density, file_id_2, processes_number, file_path)
+    return addition_algorithm_csc(ar, ia, ja, br, ib, jb)
 
 
-if __name__ == '__main__':
-    main()
+@singledispatch
+def csc_subtraction_matrices(matrix_1: list, matrix_2: list):
+    """
+   :param matrix_1: list of lists
+   :param matrix_2: list of lists
+   :return: the result of the subtraction of tow matrices stored in csc format
+   """
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
+    ar, ia, ja = csc(matrix_1)
+    if matrix_2 == matrix_1:
+        br, ib, jb = ar, ia, ja
+    else:
+        br, ib, jb = csc(matrix_2)
+    return subtraction_algorithm_csc(ar, ia, ja, br, ib, jb)
+
+
+@csc_subtraction_matrices.register
+def _csc_subtraction_matrices(file_name_1: str, file_name_2: str, processes_number=mp.cpu_count(), file_path='../'):
+    """
+    :param file_name_1: string
+    :param file_name_2: string
+    :param processes_number: int
+    :param file_path: string
+    :return: the result of the subtraction of tow matrices stored in csc format
+    """
+    matrix_1 = read_matrix_parallel(file_name_1, processes_number, file_path)
+    matrix_2 = read_matrix_parallel(file_name_2, processes_number, file_path)
+
+    if len(matrix_1) != len(matrix_2):
+        raise ValueError('Both matrices must have same number of rows.')
+
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    if matrix_1_col_size != matrix_2_col_size:
+        raise ValueError("Both matrices must have same number of columns")
+
+    ar, ia, ja = csc(matrix_1)
+    if file_name_2 == file_name_1:
+        br, ib, jb = ar, ia, ja
+    else:
+        br, ib, jb = csc(matrix_2)
+    return subtraction_algorithm_csc(ar, ia, ja, br, ib, jb)
+
+
+@csc_subtraction_matrices.register
+def _csc_subtraction_matrices(matrix_size_row_1: int, matrix_size_col_1: int, matrix_size_row_2: int,
+                              matrix_size_col_2: int, density: float, file_id_1: int, file_id_2: int,
+                              processes_number=mp.cpu_count(), file_path='../'):
+    """
+    :param matrix_size_row_1: int
+    :param matrix_size_col_1: int
+    :param matrix_size_row_2: int
+    :param matrix_size_col_2: int
+    :param density: float
+    :param file_id_1: int
+    :param file_id_2: int
+    :return: the result of the subtraction of tow matrices stored in csc format
+    """
+    if matrix_size_row_1 == matrix_size_row_2:
+        raise ValueError('Both matrices must have same number of rows.')
+
+    if matrix_size_col_1 == matrix_size_col_2:
+        raise ValueError("Both matrices must have same number of columns")
+
+    ar, ia, ja = csc(matrix_size_row_1, matrix_size_col_1, density, file_id_1, processes_number, file_path)
+    if matrix_size_row_1 == matrix_size_row_2 and matrix_size_col_1 == matrix_size_col_2 and file_id_1 == file_id_2:
+        br, ib, jb = ar, ia, ja
+    else:
+        br, ib, jb = csc(matrix_size_row_2, matrix_size_col_2, density, file_id_2, processes_number, file_path)
+    return subtraction_algorithm_csc(ar, ia, ja, br, ib, jb)

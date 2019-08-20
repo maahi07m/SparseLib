@@ -1,3 +1,6 @@
+"""
+    This script was created only for the execution of our experiments on Harwell-Boeing formatted files
+"""
 import os
 import sys
 import time
@@ -14,27 +17,6 @@ def validate_operation(cr, ic, jc, npr, inp, jnp, file_name, density, operation_
     if all(np.isclose(cr, npr)) and all(np.isclose(ic, inp)) and all(np.isclose(jc, jnp)):
         pass
     else:
-        if cr != npr:
-            print(cr)
-            print(npr)
-            for key, value in enumerate(cr):
-                if value != npr[key]:
-                    print(value, npr[key])
-
-        if ic != inp:
-            print(ic)
-            print(inp)
-            for key, value in enumerate(ic):
-                if value != inp[key]:
-                    print(value, inp[key])
-
-        if jc != jnp:
-            print(jc)
-            print(jnp)
-            for key, value in enumerate(jc):
-                if value != jnp[key]:
-                    print(value, jnp[key])
-        print("espase sto %s gia to %s" % (operation_type, file_name))
         with open(os.path.join('../operation_error', 'multiplication_hb_numpy_error.txt'), 'a') as f:
             f.write(operation_type + '_\t%s\t%.5f\n' % (file_name, density))
 

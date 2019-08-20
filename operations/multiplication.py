@@ -1,436 +1,380 @@
 """ This script contains all the multiplies of matrices inner, outer, matrix-vector, vector-matrix, matrix-matrix """
-import os
+import multiprocessing as mp
 import sys
-import time
+from functools import singledispatch
 
 sys.path.append('../')
+from read_file.matrix_read import read_matrix_parallel
 from compress.csr_coo import csr
 from compress.diagonal_csc import csc
 
+try:
+    from multiplication_algorithm import *
+except ImportError:
+    from .multiplication_algorithm import *
 
-def inner_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2, matrix_size_col_2,
-                  file_id_2):
+
+@singledispatch
+def inner_product(vector_1: list, vector_2: list):
     """
-    :param matrix_size_row_1:
-    :param matrix_size_col_1:
-    :param density:
-    :param file_id_1:
-    :param matrix_size_row_2:
-    :param matrix_size_col_2:
-    :param file_id_2:
-    ----------------------
-    input must be vector nx1, vector nx1
-    ----------------------
-    Convert the A vector in csr format and B vector in csr format, ...
-    ----------------------
-    :return: a number
+    :param vector_1: list
+    :param vector_2: list
+    :return: the result of inner product of two vectors-lists
+
+    Input must be vector nx1, vector nx1.
     """
-    if matrix_size_row_1 == matrix_size_row_2 and matrix_size_col_1 == matrix_size_col_2:
-        ar, ia, ja = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
-        br, ib, jb = csr(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
-        start_time = time.time()
-        output = 0
-        loop_bound = len(ia)  # len(ia) == len(ib)
-        for row in range(1, loop_bound):
-            ia_value = ia[row]
-            a_nz = ia_value - ia[row - 1]
-            if a_nz == 0:
-                continue
-            ib_value = ib[row]
-            b_nz = ib_value - ib[row - 1]
-            if b_nz == 0:
-                continue
-            output += ar[ia_value - 1] * br[ib_value - 1]
-        total_time = time.time() - start_time
+    if len(vector_1) == len(vector_2) and all(len(value) == 1 for value in vector_1) and \
+            all(len(value) == 1 for value in vector_2):
+        ar, ia, ja = csr(vector_1)
+        br, ib, jb = csr(vector_2)
 
-        if not os.path.exists('../execution_results'):
-            os.makedirs('../execution_results')
-        with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
-            f.write('inner product\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
-
-        if not os.path.exists('../numpy_results'):
-            os.makedirs('../numpy_results')
-        with open(os.path.join('../numpy_results', 'inner_numpy.txt'), 'r') as f:
-            result_numpy = f.read()
-
-        if int(result_numpy) != output:
-            print('espase inner')
-            if not os.path.exists('../operation_error'):
-                os.makedirs('../operation_error')
-            with open(os.path.join('../operation_error', 'inner_errors.txt'), 'a') as f:
-                f.write(' inner \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, file_id_1,
-                                                             file_id_2, density))
-        return output
+        return inner_algorithm(ar, ia, br, ib)
     else:
-        raise UserWarning('Probably wrong input. Expected <matrix_size_row_1> and <matrix_size_row_2> to be equal and '
-                          '<matrix_size_col_1> and <matrix_size_col_2> to be equal too')
+        raise ValueError('Both vectors must be nx1 size.')
 
 
-def outer_product(matrix_size_row_1, matrix_size_col_1, density, file_id_1, matrix_size_row_2, matrix_size_col_2,
-                  file_id_2):
+@inner_product.register
+def __inner_product(file_name_1: str, file_name_2: str, processes_number=mp.cpu_count(), file_path='../'):
     """
-    :param matrix_size_row_1:
-    :param matrix_size_col_1:
-    :param density:
-    :param file_id_1:
-    :param matrix_size_row_2:
-    :param matrix_size_col_2:
-    :param file_id_2:
-    ----------------------
-    input must be: vector 1xn, vector 1xn
-    ----------------------
-    Convert A matrix in csc format and B matrix in csr format, ...
-    ----------------------
-    :return: three list cr ic, jc, is the result-matrix in csr format
+    :param file_name_1: string
+    :param file_name_2: string
+    :param processes_number: int
+    :param file_path: string
+    :return: the result of inner product of two vectors-lists
+
+    Input must be vector nx1, vector nx1.
     """
-    '''1xn 1xn both'''
-    if matrix_size_row_1 == matrix_size_row_2 and matrix_size_col_1 == matrix_size_col_2:
-        ar, ia, ja = csc(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
-        br, ib, jb = csr(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
-        start_time = time.time()
-        cr, ic, jc = [], [0], []
-
-        for a_value in ar:
-            for b_value in br:
-                cr.append(a_value * b_value)
-        ic = [ja_value * len(br) for ja_value in ja]
-        jc = jb * len(ar)
-        total_time = time.time() - start_time
-        if not os.path.exists('../execution_results'):
-            os.makedirs('../execution_results')
-        with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
-            f.write('outer product\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
-
-        ncr, nic, njc = csr(matrix_size_col_1, matrix_size_col_2, density, 31)
-
-        if ncr != cr and nic != ic and njc != jc:
-            print("espase outer", matrix_size_row_1, matrix_size_col_1, density)
-            with open(os.path.join('../operation_error', 'multiplication_error.txt'), 'a') as f:
-                f.write('outer product \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, file_id_1,
-                                                                    file_id_2, density))
-        return cr, ic, jc
+    ar, ia, ja = csr(file_name_1, processes_number, file_path)
+    if file_name_2 == file_name_1:
+        br, ib, jb = ar, ia, ja
     else:
-        raise UserWarning('Probably wrong input. Expected <matrix_size_row_1> and <matrix_size_row_2> to be equal and '
-                          '<matrix_size_col_1> and <matrix_size_col_2> to be equal too')
+        br, ib, jb = csr(file_name_2, processes_number, file_path)
+
+    if len(ia) == len(ib) and all(value == 0 for value in ja) and all(value == 0 for value in jb):
+        return inner_algorithm(ar, ia, br, ib)
+    else:
+        raise ValueError('Both vectors must be nx1 size.')
 
 
-def multiply_matrix_vector(matrix_size_row_1, matrix_size_col_1, matrix_size_row_2, matrix_size_col_2, density,
-                           file_id_1, file_id_2):
+@inner_product.register
+def __inner_product(matrix_size_row_1: int, matrix_size_col_1: int, matrix_size_row_2: int,
+                    matrix_size_col_2: int, density: float, file_id_1: int, file_id_2: int,
+                    processes_number=mp.cpu_count(), file_path='../'):
     """
     :param matrix_size_row_1: int
     :param matrix_size_col_1: int
-    :param density: float
-    :param file_id_1: int
     :param matrix_size_row_2: int
     :param matrix_size_col_2: int
+    :param density: float
+    :param file_id_1: int
     :param file_id_2: int
-    ----------------------
-    input must be: matrix mxn and vector nx1
-    ----------------------
-    Convert the A matrix in csr format and the B matrix in csc format, usage of multiply_row_col function to multiply
-    ----------------------
-    :return: three lists cr, ic, jc, is the result in csc format stored
+    :param processes_number: int
+    :param file_path: string
+    :return: the result of inner product of two vectors-lists
+
+     Input must be vector nx1, vector nx1.
+    """
+    if matrix_size_row_1 == matrix_size_row_2 and matrix_size_col_1 == matrix_size_col_2 and matrix_size_col_1 == 1:
+        ar, ia, ja = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1, processes_number, file_path)
+        if file_id_1 == file_id_2:
+            br, ib, jb = ar, ia, ja
+        else:
+            br, ib, jb = csr(matrix_size_row_2, matrix_size_col_2, density, file_id_2, processes_number, file_path)
+
+        return inner_algorithm(ar, ia, br, ib)
+    else:
+        raise ValueError('Both vectors must be nx1 size.')
+
+
+@singledispatch
+def outer_product(vector_1: list, vector_2: list):
+    """
+    :param vector_1: list
+    :param vector_2: list
+    :return: three list cr ic, jc. It is the result-matrix in csr format
+
+    Input must be: vector 1xn, vector 1xn
+    """
+    if len(vector_1) == len(vector_2) and len(vector_1) == 1 and len(vector_1[0]) == len(vector_2[0]):
+        ar, ia, ja = csc(vector_1)
+        if vector_1 == vector_2:
+            br, ib, jb = ar, ia, ja
+        else:
+            br, ib, jb = csr(vector_2)
+
+        return outer_algorithm(ar, ja, br, jb)
+    else:
+        raise ValueError('Both vectors must be 1xn size.')
+
+
+@outer_product.register
+def __outer_product(file_name_1: str, file_name_2: str, processes_number=mp.cpu_count(), file_path='../'):
+    """
+    :param file_name_1: string
+    :param file_name_2: string
+    :param processes_number: int
+    :param file_path: string
+    :return: three list cr ic, jc. It is the result-matrix in csr format
+
+    Input must be: vector 1xn, vector 1xn
+    """
+    ar, ia, ja = csc(file_name_1, processes_number, file_path)
+    if file_name_2 == file_name_1:
+        br, ib, jb = ar, ia, ja
+    else:
+        br, ib, jb = csr(file_name_2, processes_number, file_path)
+
+    if len(ja) == len(jb) and all(value == 0 for value in ia) and all(value == 0 for value in ib):
+        return outer_algorithm(ar, ja, br, jb)
+    else:
+        raise ValueError('Both vectors must be 1xn size.')
+
+
+@outer_product.register
+def __outer_product(matrix_size_row_1: int, matrix_size_col_1: int, matrix_size_row_2: int,
+                    matrix_size_col_2: int, density: float, file_id_1: int, file_id_2: int,
+                    processes_number=mp.cpu_count(), file_path='../'):
+    """
+    :param matrix_size_row_1: int
+    :param matrix_size_col_1: int
+    :param matrix_size_row_2: int
+    :param matrix_size_col_2: int
+    :param density: float
+    :param file_id_1: int
+    :param file_id_2: int
+    :param processes_number: int
+    :param file_path: string
+    :return: three list cr ic, jc. It is the result-matrix in csr format
+
+    Input must be: vector 1xn, vector 1xn
+    """
+    if matrix_size_row_1 == matrix_size_row_2 and matrix_size_row_1 == 1 and matrix_size_col_1 == matrix_size_col_2:
+        ar, ia, ja = csc(matrix_size_row_1, matrix_size_col_1, density, file_id_1, processes_number, file_path)
+        if file_id_1 == file_id_2:
+            br, ib, jb = ar, ia, ja
+        else:
+            br, ib, jb = csr(matrix_size_row_2, matrix_size_col_2, density, file_id_2, processes_number, file_path)
+
+        return outer_algorithm(ar, ja, br, jb)
+    else:
+        raise ValueError('Both vectors must be 1xn size.')
+
+
+@singledispatch
+def multiply_matrix_vector(matrix: list, vector: list):
+    """
+    :param matrix: list
+    :param vector: list
+    :return: three lists cr, ic, jc, It is the result in csc format stored
+
+    Input must be: matrix mxn or nxn and vector nx1
+    """
+    matrix_1_col_size = len(matrix[0])
+    if all(len(row) == matrix_1_col_size for row in matrix) and all(len(row) == 1 for row in vector) and \
+            matrix_1_col_size == len(vector):
+        ar, ia, ja = csr(matrix)
+        xr, ix, jx = csc(vector)
+
+        return matrix_vector_algorithm(ar, ia, ja, xr, ix)
+    else:
+        raise ValueError('Wrong inputs. Matrix must be mxn or nxn and vector nx1.')
+
+
+@multiply_matrix_vector.register
+def __multiply_matrix_vector(file_name_1: str, file_name_2: str, processes_number=mp.cpu_count(), file_path='../'):
+    """
+    :param file_name_1: string
+    :param file_name_2: string
+    :param processes_number:  int
+    :param file_path: string
+    :return: three lists cr, ic, jc, It is the result in csc format stored
+
+    Input must be: matrix mxn or nxn and vector nx1
+    """
+    matrix = read_matrix_parallel(file_name_1, processes_number, file_path)
+    vector = read_matrix_parallel(file_name_2, processes_number, file_path)
+    matrix_1_col_size = len(matrix[0])
+
+    if all(len(row) == matrix_1_col_size for row in matrix) and all(len(row) == 1 for row in vector) and \
+            matrix_1_col_size == len(vector):
+        ar, ia, ja = csr(matrix)
+        xr, ix, jx = csc(vector)
+
+        return matrix_vector_algorithm(ar, ia, ja, xr, ix)
+    else:
+        raise ValueError('Wrong inputs. Matrix must be mxn or nxn and vector nx1.')
+
+
+@multiply_matrix_vector.register
+def __multiply_matrix_vector(matrix_size_row_1: int, matrix_size_col_1: int, matrix_size_row_2: int,
+                             matrix_size_col_2: int, density: float, file_id_1: int, file_id_2: int,
+                             processes_number=mp.cpu_count(), file_path='../'):
+    """
+    :param matrix_size_row_1: int
+    :param matrix_size_col_1: int
+    :param matrix_size_row_2: int
+    :param matrix_size_col_2: int
+    :param density: float
+    :param file_id_1: int
+    :param file_id_2: int
+    :param processes_number: int
+    :param file_path: string
+    :return: three lists cr, ic, jc, It is the result in csc format stored
+
+    Input must be: matrix mxn or nxn and vector nx1
     """
     if matrix_size_col_1 == matrix_size_row_2 and matrix_size_col_2 == 1:
-        ar, ia, ja = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
-        xr, ix, jx = csc(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
-        cr, ic, jc = [], [], [0]
-        start_time = time.time()
-        previous_ja_index = 0
-        vector_nz_values_dict = fetch_vector_values(ix, xr)
-        for index in range(1, len(ia)):
-            nz_number = ia[index] - ia[index - 1]
-            new_ja_index = previous_ja_index + nz_number
-            result_of_rows_cols = multiply_row_col(ja[previous_ja_index:new_ja_index],
-                                                   ar[previous_ja_index:new_ja_index], vector_nz_values_dict)
-            previous_ja_index = new_ja_index
-            if result_of_rows_cols:
-                cr.append(result_of_rows_cols)
-                ic.append(index - 1)
-        jc.append(len(cr))
+        ar, ia, ja = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1, processes_number, file_path)
+        xr, ix, jx = csc(matrix_size_row_2, matrix_size_col_2, density, file_id_2, processes_number, file_path)
 
-        total_time = time.time() - start_time
-        if not os.path.exists('../execution_results'):
-            os.makedirs('../execution_results')
-        with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
-            f.write(
-                'matrix-vector_v2\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
-
-        ncr, nic, njc = csc(matrix_size_row_2, matrix_size_col_2, density, 32)
-
-        if ncr != cr and nic != ic and njc != jc:
-            print("espase matrix vector", matrix_size_row_1, matrix_size_col_1, density)
-            with open(os.path.join('../operation_error', 'multiplication_error.txt'), 'a') as f:
-                f.write('matrix vector_v2 \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_row_2, matrix_size_col_2, file_id_1,
-                                                                       file_id_2, density))
-
-        return cr, ic, jc
+        return matrix_vector_algorithm(ar, ia, ja, xr, ix)
     else:
-        raise UserWarning('Probably wrong input. Expected <matrix_size_col_1> and <matrix_size_row_2> to be equal and '
-                          '<matrix_size_col_2> to be equal with 1')
+        raise ValueError('Wrong inputs. Matrix must be mxn or nxn and vector nx1.')
 
 
-def multiply_row_col(row_indexes, row_values, vector_nz_values):
+@singledispatch
+def multiply_vector_matrix(matrix: list, vector: list):
     """
-    :param row_indexes: list
-    :param row_values: list
-    :param vector_nz_values: list
-    ----------------------
-    A loop in the max length of indexes lists multiply only when the elements in indexes lists is the same
-    based in inner algorithm we found
-    ----------------------
-    :return: the result of a row/col multiply by a sparse vectors elements
+    :param matrix: list
+    :param vector: list
+    :return: three lists cr, ic, jc. It is the result in csr format stored
+
+    Input must be: matrix nxm or nxn and vector 1xn
     """
-    result = 0
-    for index, value in enumerate(row_indexes):
-        if value in vector_nz_values:
-            result += vector_nz_values[value] * row_values[index]
-    return result
+    matrix_1_col_size = len(matrix[0])
+    matrix_2_col_size = len(vector[0])
+    if len(vector) == 1 and len(matrix) == matrix_2_col_size and \
+            all(len(row) == matrix_1_col_size for row in matrix):
+
+        ar, ia, ja = csc(matrix)
+        xr, ix, jx = csr(vector)
+        return vector_matrix_algorithm(ar, ia, ja, xr, jx)
+    else:
+        raise ValueError('Wrong inputs. Matrix must be mxn or nxn and vector 1xn.')
 
 
-def fetch_vector_values(vector_nz_indexes, vector_nz_values):
-    vector_nz_values_dict = {}
-    for index, value in enumerate(vector_nz_indexes):
-        vector_nz_values_dict[value] = vector_nz_values[index]
-    return vector_nz_values_dict
-
-
-def multiply_vector_matrix(matrix_size_row_1, matrix_size_col_1, matrix_size_row_2, matrix_size_col_2, density,
-                           file_id_1, file_id_2):
+@multiply_vector_matrix.register
+def __multiply_vector_matrix(file_name_1: str, file_name_2: str, processes_number=mp.cpu_count(), file_path='../'):
     """
-    :param matrix_size_row_1: int
-    :param matrix_size_col_1: int
-    :param density: float
-    :param file_id_1: int
-    :param matrix_size_row_2: int
-    :param matrix_size_col_2: int
-    :param file_id_2: int
-    ----------------------
-    input must be: matrix nxm, vector 1xn
-    ----------------------
-    Convert the A matrix in csc format and the B matrix in csr format, usage of multiply_row_col function to multiply
-    ----------------------
-    :return: three lists cr, ic, jc, is the result in csr format stored
+    :param file_name_1: string
+    :param file_name_2: string
+    :return: three lists cr, ic, jc. It is the result in csr format stored
+
+    Input must be: matrix nxm or nxn and vector 1xn
     """
-    ar, ia, ja = csc(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
-    xr, ix, jx = csr(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
-    cr, ic, jc = [], [0], []
-    previous_ia_index = 0
-    start_time = time.time()
-    vector_nz_values_dict = fetch_vector_values(jx, xr)
-    for index in range(1, len(ja)):
-        nz_number = ja[index] - ja[index - 1]
-        if nz_number == 0:
-            continue
-        new_ia_index = previous_ia_index + nz_number
-        result_of_rows_cols = multiply_row_col(ia[previous_ia_index:new_ia_index], ar[previous_ia_index:new_ia_index],
-                                               vector_nz_values_dict)
-        previous_ia_index = new_ia_index
-        if result_of_rows_cols:
-            cr.append(result_of_rows_cols)
-            jc.append(index - 1)
+    matrix = read_matrix_parallel(file_name_1, processes_number, file_path)
+    vector = read_matrix_parallel(file_name_2, processes_number, file_path)
+    matrix_col_size = len(matrix[0])  # m
+    vector_col_size = len(vector[0])  # n
 
-    ic.append(len(cr))
-    total_time = time.time() - start_time
-    if not os.path.exists('../execution_results'):
-        os.makedirs('../execution_results')
-    with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
-        f.write('vector-matrix_v2\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, density, total_time))
+    # if x has only one line and matrix's rows are equal to vector's columns and all lines of matrix are equal to
+    # m length
+    if len(vector) == 1 and len(matrix) == vector_col_size and \
+            all(len(row) == matrix_col_size for row in matrix):
 
-    ncr, nic, njc = csc(matrix_size_row_1, matrix_size_col_1, density, 33)
-
-    if ncr != cr and nic != ic and njc != jc:
-        print("vector_matrix espase", matrix_size_row_1, matrix_size_col_1, density)
-        with open(os.path.join('../operation_error', 'multiplication_error.txt'), 'a') as f:
-            f.write('vector matrix_v2 \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, file_id_1,
-                                                                   file_id_2, density))
-
-    return cr, ic, jc
+        ar, ia, ja = csc(matrix)
+        xr, ix, jx = csr(vector)
+        return vector_matrix_algorithm(ar, ia, ja, xr, jx)
+    else:
+        raise ValueError('Wrong inputs. Matrix must be mxn or nxn and vector 1xn.')
 
 
-# def multiply_row_col(row_indexes, row_values, vector_nz_indexes, vector_nz_values):
-#     """
-#     :param row_indexes: list
-#     :param row_values: list
-#     :param vector_nz_indexes: list
-#     :param vector_nz_values: list
-#     ----------------------
-#     A loop in the max length of indexes lists multiply only when the elements in indexes lists is the same
-#     based in inner algorithm we found
-#     ----------------------
-#     :return: the result of a row/col multiply by a sparse vectors elements
-#     """
-#     result = 0
-#     row_nz_values = {}
-#     for index, value in enumerate(row_indexes):
-#         row_nz_values[value] = row_values[index]
-#
-#     for index, value in enumerate(vector_nz_indexes):
-#         if value in row_nz_values:
-#             result += row_nz_values[value] * vector_nz_values[index]
-#
-#     return result
-
-
-# def multiply_row_col(row_indexes, row_values, vector_nz_indexes, vector_nz_values):
-#     """
-#     :param row_indexes: list
-#     :param row_values: list
-#     :param vector_nz_indexes: list
-#     :param vector_nz_values: list
-#     ----------------------
-#     A loop in the max length of indexes lists multiply only when the elements in indexes lists is the same
-#     based in inner algorithm we found
-#     ----------------------
-#     :return: the result of a row/col multiply by a sparse vectors elements
-#     """
-#     result = 0
-#     length_row_index = len(row_indexes)
-#     length_vector_index = len(vector_nz_indexes)
-#     loop_upper_bound = max(length_row_index, length_vector_index)
-#     row_index = 0
-#     vector_index = 0
-#     for index in range(loop_upper_bound):
-#         if row_indexes[row_index] < vector_nz_indexes[vector_index]:
-#             row_index += 1
-#         elif row_indexes[row_index] > vector_nz_indexes[vector_index]:
-#             vector_index += 1
-#         else:
-#             result += row_values[row_index] * vector_nz_values[vector_index]
-#             row_index += 1
-#             vector_index += 1
-#         if row_index >= length_row_index or vector_index >= length_vector_index:
-#             break
-#
-#     return result
-
-
-def multiply_matrix_matrix(matrix_size_row_1, matrix_size_col_1, matrix_size_row_2, matrix_size_col_2, density,
-                           file_id_1, file_id_2):
+@multiply_vector_matrix.register
+def __multiply_vector_matrix(matrix_size_row_1: int, matrix_size_col_1: int, matrix_size_row_2: int,
+                             matrix_size_col_2: int, density: float, file_id_1: int, file_id_2: int,
+                             processes_number=mp.cpu_count(), file_path='../'):
     """
     :param matrix_size_row_1: int
     :param matrix_size_col_1: int
-    :param density: float
-    :param file_id_1: int
     :param matrix_size_row_2: int
     :param matrix_size_col_2: int
+    :param density: float
+    :param file_id_1: int
     :param file_id_2: int
-    ----------------------
-    Convert A matrix in csr format and B matrix in csc format, firstly with the usage of fetch_inner_for_loop_values
-    function create the b_cols_list containing the number of non zero values in each cols in B matrix to use it
-    in multiply_row_col_for_matrix_multi to multiply with the non zero values of A matrix
-    ----------------------
-    :return: three lists cr, ic, jc, is the result of the multiplication in csr format stored
+    :return: three lists cr, ic, jc. It is the result in csr format stored
+
+    Input must be: matrix nxm or nxn and vector 1xn
+    """
+    if matrix_size_row_1 == matrix_size_col_2 and matrix_size_row_2 == 1:
+        ar, ia, ja = csc(matrix_size_row_1, matrix_size_col_1, density, file_id_1, processes_number, file_path)
+        xr, ix, jx = csr(matrix_size_row_2, matrix_size_col_2, density, file_id_2, processes_number, file_path)
+
+        return vector_matrix_algorithm(ar, ia, ja, xr, jx)
+    else:
+        raise ValueError('Wrong inputs. Matrix must be mxn or nxn and vector 1xn.')
+
+
+@singledispatch
+def matrix_matrix_multiplication(matrix_1: list, matrix_2: list):
+    """
+    :param matrix_1: list
+    :param matrix_2: list
+    :return: three lists cr, ic, jc. It is the result of the multiplication in csr format stored
+
+    Input must be: matrix_1 mxn and matrix_2 nxk.
+    """
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    matrix_2_row_size = len(matrix_2)
+
+    if all(len(row) == matrix_1_col_size for row in matrix_1) and all(
+            len(row) == matrix_2_col_size for row in matrix_2) and matrix_1_col_size == matrix_2_row_size:
+        ar, ia, ja = csr(matrix_1)
+        br, ib, jb = csc(matrix_2)
+        return matrix_matrix_algorithm(ar, ia, ja, br, ib, jb)
+    else:
+        raise ValueError('Wrong inputs. Matrix_1 must be mxn and matrix_2 nxk.')
+
+
+@matrix_matrix_multiplication.register
+def __matrix_matrix_multiplication(file_name_1: str, file_name_2: str, processes_number=mp.cpu_count(),
+                                   file_path='../'):
+    """
+    :param file_name_1: string
+    :param file_name_2: string
+    :param processes_number: int
+    :param file_path: string
+    :return: three lists cr, ic, jc. It is the result of the multiplication in csr format stored
+
+     Input must be: matrix_1 mxn and matrix_2 nxk.
+    """
+    matrix_1 = read_matrix_parallel(file_name_1, processes_number, file_path)
+    matrix_2 = read_matrix_parallel(file_name_2, processes_number, file_path)
+    matrix_1_col_size = len(matrix_1[0])
+    matrix_2_col_size = len(matrix_2[0])
+    matrix_2_row_size = len(matrix_2)
+
+    if all(len(row) == matrix_1_col_size for row in matrix_1) and all(
+            len(row) == matrix_2_col_size for row in matrix_2) and matrix_1_col_size == matrix_2_row_size:
+        ar, ia, ja = csr(matrix_1)
+        br, ib, jb = csc(matrix_2)
+        return matrix_matrix_algorithm(ar, ia, ja, br, ib, jb)
+    else:
+        raise ValueError('Wrong inputs. Matrix_1 must be mxn and matrix_2 nxk.')
+
+
+@matrix_matrix_multiplication.register
+def __matrix_matrix_multiplication(matrix_size_row_1: int, matrix_size_col_1: int, matrix_size_row_2: int,
+                                   matrix_size_col_2: int, density: float, file_id_1: int, file_id_2: int,
+                                   processes_number=mp.cpu_count(), file_path='../'):
+    """
+    :param matrix_size_row_1: int
+    :param matrix_size_col_1: int
+    :param matrix_size_row_2: int
+    :param matrix_size_col_2: int
+    :param density: float
+    :param file_id_1: int
+    :param file_id_2: int
+    :param processes_number: int
+    :param file_path: string
+    :return: three lists cr, ic, jc. It is the result of the multiplication in csr format stored
+
+    Input must be: matrix_1 mxn and matrix_2 nxk.
     """
     if matrix_size_col_1 == matrix_size_row_2:
-        ar, ia, ja = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1)
-        br, ib, jb = csc(matrix_size_row_2, matrix_size_col_2, density, file_id_2)
-        cr, ic, jc = [], [0], []
-        previous_index_a = 0
-        counter_nz = 0
+        ar, ia, ja = csr(matrix_size_row_1, matrix_size_col_1, density, file_id_1, processes_number, file_path)
+        br, ib, jb = csc(matrix_size_row_2, matrix_size_col_2, density, file_id_2, processes_number, file_path)
 
-        start_time = time.time()
-        b_cols_list = fetch_inner_for_loop_values(ib, br, jb)
-        length_jb = len(b_cols_list)
-        length_ia = len(ia)
-
-        for index in range(1, length_ia):
-            nz_number_a = ia[index] - ia[index - 1]
-            if nz_number_a == 0:
-                continue
-            new_index_a = previous_index_a + nz_number_a
-            a_rows = ja[previous_index_a:new_index_a]
-            a_values = ar[previous_index_a:new_index_a]
-            previous_index_a = new_index_a
-
-            for inner_index in range(length_jb):
-                result = multiply_row_col_for_matrix_matrix_multiplication(a_rows, a_values, b_cols_list[inner_index])
-
-                if result:
-                    cr.append(result)
-                    jc.append(inner_index - 1)
-                    counter_nz += 1
-            ic.append(counter_nz)
-
-        total_time = time.time() - start_time
-        if not os.path.exists('../execution_results'):
-            os.makedirs('../execution_results')
-        with open(os.path.join('../execution_results', 'multiplication_time.txt'), 'a') as f:
-            f.write(
-                'matrix-matrix\t%s\t%s\t%s\t%s\t%.5f\n' % (matrix_size_row_1, matrix_size_col_1, matrix_size_col_2,
-                                                           density, total_time))
-
-        ncr, nic, njc = csr(matrix_size_col_1, matrix_size_row_2, density, 34)
-
-        if ncr != cr and nic != ic and njc != jc:
-            print(len(ncr), len(cr), len(nic), len(ic), len(njc), len(jc))
-            print("espase matrix matrix", matrix_size_row_1, matrix_size_col_1, matrix_size_row_2, matrix_size_col_2,
-                  density, file_id_1, file_id_2)
-            with open(os.path.join('../operation_error', 'multiplication_error.txt'), 'a') as f:
-                f.write('matrix matrix \t%d\t%d\t%d\t%d\t%.5f\n' % (matrix_size_col_1, matrix_size_row_2, file_id_1,
-                                                                    file_id_2, density))
-
+        return matrix_matrix_algorithm(ar, ia, ja, br, ib, jb)
     else:
-        raise UserWarning('Probably wrong input. Expected <matrix_size_col_1> and <matrix_size_row_2> to be equal')
-
-    return cr, ic, jc
-
-
-def multiply_row_col_for_matrix_matrix_multiplication(row_indexes, row_values, vector_nz):
-    """
-    :param row_indexes: list
-    :param row_values: list
-    :param vector_nz: list
-    ----------------------
-    :return: the result of multiplication for a row and a col
-    """
-    result = 0
-    for index, value in enumerate(row_indexes):
-        if value in vector_nz:
-            result += row_values[index] * vector_nz[value]
-
-    return result
-
-
-def fetch_inner_for_loop_values(ib, br, jb):
-    """
-    :param ib: list
-    :param br: list
-    :param jb: list
-    ----------------------
-    :return: a list of non zero values per col
-    """
-    b_cols_list = []
-    previous_index_b = 0
-    for index in range(1, len(jb)):
-        nz_number_b = jb[index] - jb[index - 1]
-        new_index_b = previous_index_b + nz_number_b
-        temp_dict = {}
-        for inner_index in range(previous_index_b, new_index_b):
-            temp_dict[ib[inner_index]] = br[inner_index]
-        b_cols_list.append(temp_dict)
-        previous_index_b = new_index_b
-
-    return b_cols_list
-
-
-if __name__ == '__main__':
-    if sys.argv[1] == 'inner':
-        result_inner = inner_product(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]),
-                                     int(sys.argv[6]),
-                                     int(sys.argv[7]), int(sys.argv[8]))
-    elif sys.argv[1] == 'outer':
-        result_outer = outer_product(int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), int(sys.argv[5]),
-                                     int(sys.argv[6]),
-                                     int(sys.argv[7]), int(sys.argv[8]))
-    elif sys.argv[1] == 'matrix_vector':
-        multiply_matrix_vector(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]),
-                               float(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8]))
-    elif sys.argv[1] == 'vector_matrix':
-        multiply_vector_matrix(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]),
-                               float(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8]))
-    elif sys.argv[1] == 'matrix_matrix':
-        multiply_matrix_matrix(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]),
-                               float(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8]))
-    else:
-        print('You choose wrong algorithm.')
+        raise ValueError('Wrong inputs. Matrix_1 must be mxn and matrix_2 nxk.')
