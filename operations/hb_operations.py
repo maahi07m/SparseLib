@@ -23,6 +23,13 @@ except ImportError:
 
 
 def csr_addition_matrices_hb(file_name_1: str, file_name_2: str):
+    """
+    :param file_name_1: string
+    :param file_name_2: string
+    :return: the result of the addition of two Harwell-Boeing matrices in csr format
+
+    It takes as input two files in Harwell-Boeing format and returns the result of their addition in csr format
+    """
     matrix_1 = read_file(file_name=file_name_1, return_list=True)
     matrix_2 = read_file(file_name=file_name_2, return_list=True)
 
@@ -44,6 +51,13 @@ def csr_addition_matrices_hb(file_name_1: str, file_name_2: str):
 
 
 def csr_subtraction_matrices_hb(file_name_1: str, file_name_2: str):
+    """
+    :param file_name_1: string
+    :param file_name_2: string
+    :return: the result of the subtraction of two Harwell-Boeing matrices in csr format
+
+    It takes as input two files in Harwell-Boeing format and returns the result of their subtraction in csr format
+    """
     matrix_1 = read_file(file_name=file_name_1, return_list=True)
     matrix_2 = read_file(file_name=file_name_2, return_list=True)
 
@@ -65,6 +79,13 @@ def csr_subtraction_matrices_hb(file_name_1: str, file_name_2: str):
 
 
 def csc_addition_matrices_hb(file_name_1: str, file_name_2: str):
+    """
+    :param file_name_1: string
+    :param file_name_2: string
+    :return: the result of the addition of two Harwell-Boeing matrices in csc format
+
+    It takes as input two files in Harwell-Boeing format and returns the result of their addition in csc format
+    """
     matrix_1 = read_file(file_name=file_name_1, return_list=True)
     matrix_2 = read_file(file_name=file_name_2, return_list=True)
 
@@ -86,6 +107,13 @@ def csc_addition_matrices_hb(file_name_1: str, file_name_2: str):
 
 
 def csc_subtraction_matrices_hb(file_name_1: str, file_name_2: str):
+    """
+    :param file_name_1: string
+    :param file_name_2: string
+    :return: the result of the subtraction of two Harwell-Boeing matrices in csc format
+
+    It takes as input two files in Harwell-Boeing format and returns the result of their subtraction in csc format
+    """
     matrix_1 = read_file(file_name=file_name_1, return_list=True)
     matrix_2 = read_file(file_name=file_name_2, return_list=True)
 
@@ -107,6 +135,14 @@ def csc_subtraction_matrices_hb(file_name_1: str, file_name_2: str):
 
 
 def multiply_matrix_vector_hb(file_name_1: str, file_name_2: str):
+    """
+    :param file_name_1: string
+    :param file_name_2: string
+    :return: the result of the multiplication of a Harwell-Boeing matrix and a Harwell-Boeing vector in csc format
+
+    It takes as input two files in Harwell-Boeing format and returns the result of their multiplication in csc format.
+    Matrix must be either mxn or nxn and vector must be nx1
+    """
     matrix = read_file(file_name=file_name_1, return_list=True)
     vector = read_file(file_name=file_name_2, return_list=True)
     matrix_1_col_size = len(matrix[0])
@@ -122,6 +158,14 @@ def multiply_matrix_vector_hb(file_name_1: str, file_name_2: str):
 
 
 def multiply_vector_matrix_hb(file_name_1: str, file_name_2: str):
+    """
+    :param file_name_1: string
+    :param file_name_2: string
+    :return: the result of the multiplication of a Harwell-Boeing vector and a Harwell-Boeing matrix in csr format
+
+    It takes as input two files in Harwell-Boeing format and returns the result of their multiplication in csr format.
+    Vector must be nx1 and matrix must be either nxm or nxn
+    """
     matrix = read_file(file_name=file_name_1, return_list=True)
     vector = read_file(file_name=file_name_2, return_list=True)
     matrix_col_size = len(matrix[0])  # m
@@ -138,6 +182,14 @@ def multiply_vector_matrix_hb(file_name_1: str, file_name_2: str):
 
 
 def matrix_matrix_multiplication_hb(file_name_1: str, file_name_2: str):
+    """
+    :param file_name_1: string
+    :param file_name_2: string
+    :return: the result of the multiplication of a Harwell-Boeing matrices in csr format
+
+    It takes as input two files in Harwell-Boeing format and returns the result of their multiplication in csr format.
+    The first matrix must be mxn or nxn and the second one must nxk
+    """
     matrix_1 = read_file(file_name=file_name_1, return_list=True)
     matrix_2 = read_file(file_name=file_name_2, return_list=True)
     matrix_1_col_size = len(matrix_1[0])
@@ -149,11 +201,4 @@ def matrix_matrix_multiplication_hb(file_name_1: str, file_name_2: str):
 
         return matrix_matrix_algorithm(ar, ia, ja, br, ib, jb)
     else:
-        raise ValueError('Wrong inputs. Matrix_1 must be mxn and matrix_2 nxm.')
-
-
-if __name__ == '__main__':
-    cr, ic, jc = matrix_matrix_multiplication_hb('bcsstk01.rsa', 'bcsstk01.rsa')
-    print(len(cr))
-    print(len(ic))
-    print(len(jc))
+        raise ValueError('Wrong inputs. Matrix_1 must be mxn and matrix_2 nxk.')
