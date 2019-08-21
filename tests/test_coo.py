@@ -2,7 +2,9 @@
     To run test_coo only execute: pytest -k coo
 """
 import sys
+
 import pytest
+
 sys.path.append('../')
 from compress.csr_coo import coo
 
@@ -74,6 +76,12 @@ def test_coo_wrong_matrix_format_2():
 
 
 def test_coo_wrong_matrix_format_3():
-    matrix = ""
+    matrix = 0.05
     with pytest.raises(TypeError, match=r"Expected list or tuple. Got"):
+        coo(matrix)
+
+
+def test_coo_wrong_matrix_format_4():
+    matrix = ""
+    with pytest.raises(FileNotFoundError, match=r"File .* not found"):
         coo(matrix)

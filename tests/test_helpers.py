@@ -1,9 +1,11 @@
-import sys
 import os
+import sys
+
 import numpy as np
+
 sys.path.append('../')
 from read_file.matrix_read import read_matrix_parallel
-from helpers.generator import generate_sparse_matrix
+from generator.generator import generate_sparse_matrix
 
 
 def test_generator_call():

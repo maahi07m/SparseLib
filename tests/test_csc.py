@@ -2,7 +2,9 @@
     To run test_csc only execute: pytest -k csc
 """
 import sys
+
 import pytest
+
 sys.path.append('../')
 from compress.diagonal_csc import csc
 
@@ -74,6 +76,12 @@ def test_csc_wrong_matrix_format_2():
 
 
 def test_csc_wrong_matrix_format_3():
-    matrix = ""
+    matrix = 0.05
     with pytest.raises(TypeError, match=r"Expected list or tuple. Got"):
+        csc(matrix)
+
+
+def test_csc_wrong_matrix_format_4():
+    matrix = ""
+    with pytest.raises(FileNotFoundError, match=r"File .* not found"):
         csc(matrix)

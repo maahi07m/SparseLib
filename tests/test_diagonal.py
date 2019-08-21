@@ -2,7 +2,9 @@
     To run test_diagonal only execute: pytest -k diagonal
 """
 import sys
+
 import pytest
+
 sys.path.append('../')
 from compress.diagonal_csc import diagonal
 
@@ -149,6 +151,12 @@ def test_diagonal_wrong_matrix_format_2():
 
 
 def test_diagonal_wrong_matrix_format_3():
-    matrix = ""
+    matrix = 0.05
     with pytest.raises(TypeError, match=r"Expected list or tuple. Got"):
+        diagonal(matrix)
+
+
+def test_diagonal_wrong_matrix_format_4():
+    matrix = ""
+    with pytest.raises(FileNotFoundError, match=r"File .* not found"):
         diagonal(matrix)

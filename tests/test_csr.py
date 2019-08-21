@@ -2,7 +2,9 @@
     To run test_csr only execute: pytest -k csr
 """
 import sys
+
 import pytest
+
 sys.path.append('../')
 from compress.csr_coo import csr
 
@@ -74,8 +76,14 @@ def test_csr_wrong_matrix_format_2():
 
 
 def test_csr_wrong_matrix_format_3():
-    matrix = ""
+    matrix = 0.05
     with pytest.raises(TypeError, match=r"Expected list or tuple. Got"):
+        csr(matrix)
+
+
+def test_csr_wrong_matrix_format_4():
+    matrix = ""
+    with pytest.raises(FileNotFoundError, match=r"File .* not found"):
         csr(matrix)
 
 
