@@ -88,7 +88,6 @@ def test_outer_3():
     vector_1 = [[3, 0, 5]]
     vector_2 = [[3, 0, 5]]
     ar, ia, ja = outer_product(vector_1, vector_2)
-    print(ar, ia, ja)
     assert ar == [9, 15, 15, 25]
     assert ia == [0, 2, 2, 4]
     assert ja == [0, 2, 0, 2]
@@ -305,12 +304,11 @@ def test_matrix_matrix_mxn_1():
     assert ja == []
 
 
-def test_matrix_matrix_empty_matrix_1(): matrix_1 = []
-
-
-matrix_2 = [[2, 0, 0], [0, 0, 12], [0, 2, 10], [1, 6, 0]]
-with pytest.raises(ValueError, match=r"First given matrix is empty"):
-    matrix_matrix_multiplication(matrix_1, matrix_2)
+def test_matrix_matrix_empty_matrix_1():
+    matrix_1 = []
+    matrix_2 = [[2, 0, 0], [0, 0, 12], [0, 2, 10], [1, 6, 0]]
+    with pytest.raises(ValueError, match=r"First given matrix is empty"):
+        matrix_matrix_multiplication(matrix_1, matrix_2)
 
 
 def test_matrix_matrix_empty_matrix_2():
