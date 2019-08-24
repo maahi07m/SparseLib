@@ -4,7 +4,7 @@ import os
 import re
 
 
-def read_file(file_name, return_list=False, file_path='../'):
+def read_file(file_name, return_list=True, file_path='../'):
     """
     :param return_list: boolean
     :param file_name: string
