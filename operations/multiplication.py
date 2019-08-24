@@ -235,9 +235,9 @@ def multiply_matrix_vector(matrix: list, vector: list):
     if len(vector) == 0:
         raise ValueError("Empty vector was given")
 
-    matrix_1_col_size = len(matrix[0])
-    if matrix_1_col_size == len(vector):
-        if not all(len(row) == matrix_1_col_size for row in matrix):
+    matrix_col_size = len(matrix[0])
+    if matrix_col_size == len(vector):
+        if not all(len(row) == matrix_col_size for row in matrix):
             raise ValueError("All matrix's rows must have equal length")
 
         if not all(len(row) == 1 for row in vector):
@@ -264,7 +264,7 @@ def __multiply_matrix_vector(file_name_1: str, file_name_2: str, processes_numbe
     """
     matrix = read_matrix_parallel(file_name_1, processes_number, file_path)
     vector = read_matrix_parallel(file_name_2, processes_number, file_path)
-    matrix_1_col_size = len(matrix[0])
+    matrix_col_size = len(matrix[0])
 
     if len(matrix) == 0:
         raise ValueError("Empty matrix was given")
@@ -272,8 +272,8 @@ def __multiply_matrix_vector(file_name_1: str, file_name_2: str, processes_numbe
     if len(vector) == 0:
         raise ValueError("Empty vector was given")
 
-    if matrix_1_col_size == len(vector):
-        if not all(len(row) == matrix_1_col_size for row in matrix):
+    if matrix_col_size == len(vector):
+        if not all(len(row) == matrix_col_size for row in matrix):
             raise ValueError("All matrix's rows must have equal length")
 
         if not all(len(row) == 1 for row in vector):
