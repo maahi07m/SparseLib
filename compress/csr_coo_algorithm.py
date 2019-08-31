@@ -8,8 +8,7 @@ def csr_algorithm(file_matrix):
     of matrix in array AR and JA contains the corresponding column numbers of each non zero
     element in matrix.
     """
-    ar, ia, ja = [], [], []
-    ia.append(0)
+    ar, ia, ja = [], [0], []
     ne_counter = 0
     for row, line in enumerate(file_matrix):
         for col, value in enumerate(line):

@@ -20,8 +20,6 @@ def csc_algorithm(matrix):
                 ne_counter += 1
                 ia.append(row)
 
-                if len(ja) == 0:
-                    ja.append(col)
         ja.append(ne_counter)
 
     return ar, ia, ja
